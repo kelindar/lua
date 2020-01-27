@@ -16,7 +16,7 @@ func newScript(file string) (*Script, error) {
 	return FromReader("test.lua", f)
 }
 
-func TestGet(t *testing.T) {
+func Test_Fib(t *testing.T) {
 
 	s, err := newScript("fixtures/fib.lua")
 	assert.NoError(t, err)
@@ -31,8 +31,17 @@ func TestGet(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// Benchmark_Serial/fib-8         	 6138716	       196 ns/op	      16 B/op	       2 allocs/op
-// Benchmark_Serial/empty-8       	 7206128	       167 ns/op	       8 B/op	       1 allocs/op
+func Test_Empty(t *testing.T) {
+	s, err := newScript("fixtures/empty.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, TypeNil, out.Type())
+}
+
+// Benchmark_Serial/fib-8         	 6046147	       197 ns/op	      16 B/op	       2 allocs/op
+// Benchmark_Serial/empty-8       	 9117265	       131 ns/op	       0 B/op	       0 allocs/op
 func Benchmark_Serial(b *testing.B) {
 	b.Run("fib", func(b *testing.B) {
 		s, _ := newScript("fixtures/fib.lua")
@@ -53,7 +62,7 @@ func Benchmark_Serial(b *testing.B) {
 	})
 }
 
-// Benchmark_Fib_Parallel-8   	 4149006	       286 ns/op	      32 B/op	       3 allocs/op
+// Benchmark_Fib_Parallel-8   	 4951480	       242 ns/op	      16 B/op	       2 allocs/op
 func Benchmark_Fib_Parallel(b *testing.B) {
 	s, _ := newScript("fixtures/fib.lua")
 	b.ReportAllocs()

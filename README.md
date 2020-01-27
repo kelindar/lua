@@ -33,6 +33,6 @@ Future improvements might include:
 ## Benchmarks
 
 ```
-Benchmark_Serial/fib-8         	 6138716	       196 ns/op	      16 B/op	       2 allocs/op
-Benchmark_Serial/empty-8       	 7206128	       167 ns/op	       8 B/op	       1 allocs/op
+Benchmark_Serial/fib-8         	 6046147	       197 ns/op	      16 B/op	       2 allocs/op
+Benchmark_Serial/empty-8       	 9117265	       131 ns/op	       0 B/op	       0 allocs/op
 ```

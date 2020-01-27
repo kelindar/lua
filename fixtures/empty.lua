@@ -1,3 +1,3 @@
 function main()
-    return 1
+    local x = 1
 end
