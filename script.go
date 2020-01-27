@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	errInvalidScript = errors.New("script is not in a valid state")
+	errInvalidScript = errors.New("lua: script is not in a valid state")
 )
 
 // Script represents a LUA script
@@ -28,19 +28,21 @@ type Script struct {
 	argn int            // The number of arguments
 	exec *lua.LState    // The runtime for the script
 	main *lua.LFunction // The main function
+	mods []*Module      // The injected modules
 }
 
 // FromReader reads a script fron an io.Reader
-func FromReader(name string, r io.Reader) (*Script, error) {
+func FromReader(name string, r io.Reader, modules ...*Module) (*Script, error) {
 	script := &Script{
 		name: name,
+		mods: modules,
 	}
 	return script, script.Update(r)
 }
 
 // FromString reads a script fron a string
-func FromString(name, code string) (*Script, error) {
-	return FromReader(name, bytes.NewBufferString(code))
+func FromString(name, code string, modules ...*Module) (*Script, error) {
+	return FromReader(name, bytes.NewBufferString(code), modules...)
 }
 
 // Run runs the main function of the script with arguments.
@@ -81,6 +83,11 @@ func (s *Script) Update(r io.Reader) error {
 	// Push the function to the runtime
 	codeFn := runtime.NewFunctionFromProto(fn)
 	runtime.Push(codeFn)
+
+	// Inject the modules
+	for _, m := range s.mods {
+		m.inject(runtime)
+	}
 
 	// Initialize by calling the script
 	if err := runtime.PCall(0, lua.MultRet, nil); err != nil {
@@ -144,11 +151,11 @@ func newVM() *lua.LState {
 func findFunction(runtime *lua.LState, name string) (*lua.LFunction, error) {
 	fn := runtime.GetGlobal(name)
 	if fn == nil {
-		return nil, fmt.Errorf("%s() function not found", name)
+		return nil, fmt.Errorf("lua: %s() function not found", name)
 	}
 
 	if fn.Type() != lua.LTFunction {
-		return nil, fmt.Errorf("%s() is %s, not a function", name, fn.Type())
+		return nil, fmt.Errorf("lua: %s() is %s, not a function", name, fn.Type())
 	}
 
 	return fn.(*lua.LFunction), nil

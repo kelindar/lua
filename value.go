@@ -5,9 +5,24 @@ package lua
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/yuin/gopher-lua"
 )
+
+var (
+	typeError  = reflect.TypeOf((*error)(nil)).Elem()
+	typeValue  = reflect.TypeOf((*Value)(nil)).Elem()
+	typeNumber = reflect.TypeOf(Number(0))
+	typeString = reflect.TypeOf(String(""))
+	typeBool   = reflect.TypeOf(Bool(true))
+)
+
+var typeMap = map[reflect.Type]Type{
+	typeString: TypeString,
+	typeNumber: TypeNumber,
+	typeBool:   TypeBool,
+}
 
 // Type represents a type of the value
 type Type byte
@@ -140,6 +155,17 @@ func luaValueOf(i interface{}) lua.LValue {
 		return lua.LBool(v)
 	case string:
 		return lua.LString(v)
+	case reflect.Value:
+		switch v.Type() {
+		case typeString:
+			return lua.LString(v.String())
+		case typeNumber:
+			return lua.LNumber(v.Float())
+		case typeBool:
+			return lua.LBool(v.Bool())
+		default:
+			return lua.LNil
+		}
 	default:
 		return lua.LNil
 	}

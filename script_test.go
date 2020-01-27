@@ -13,7 +13,7 @@ import (
 
 func newScript(file string) (*Script, error) {
 	f, _ := os.Open(file)
-	return FromReader("test.lua", f)
+	return FromReader("test.lua", f, testModule())
 }
 
 type Person struct {

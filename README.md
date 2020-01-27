@@ -39,6 +39,43 @@ println(out)         // Outputs: "Updated"
 println(input.Name)  // Outputs: "Updated"
 ```
 
+## Modules
+
+This library also supports and abstracts modules, which allows you to provide one or multiple native libraries which can be used by the script. These things are just ensembles of functions which are implemented in pure Go. 
+
+Such functions must comply to a specific interface - they should have their arguments as the library's values (e.g. `Number`, `String` or `Bool`) and the result can be either a value and `error` or just an `error`. Here's an example of such function:
+```
+func hash(s lua.String) (lua.Number, error) {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+
+	return lua.Number(h.Sum32()), nil
+}
+```
+
+In order to use it, the functions should be registered into a `Module` which then is loaded when script is created.
+```
+// Create a test module which provides hash function
+module := &Module{
+    Name:    "test",
+    Version: "1.0.0",
+}
+module.Register("hash", hash)
+
+// Load the script
+s, err := FromString("test.lua", `
+    local api = require("test")
+
+    function main(input)
+        return api.hash(input)
+    end
+`, module) // <- attach the module
+
+out, err := s.Run(context.Background(), "abcdef")
+println(out) // Output: 4282878506
+
+```
+
 
 ## Benchmarks
 
