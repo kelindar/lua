@@ -20,33 +20,36 @@ var (
 // Module represents a loadable module
 type Module struct {
 	lock    sync.Mutex
-	funcs   map[string]lua.LGFunction
+	funcs   map[string]fngen
 	Name    string // The name of the module
 	Version string // The module version string
 }
 
-// Generate generates a function
-func generate(name string, function interface{}) (lua.LGFunction, error) {
-	rv := reflect.ValueOf(function)
-	rt := rv.Type()
-	if err := isValidFunction(rt); err != nil {
-		return nil, err
-	}
+type fngen struct {
+	name string
+	code interface{}
+}
 
-	argCount := rt.NumIn()
+// Generate generates a function
+func (g *fngen) generate() lua.LGFunction {
+	rv := reflect.ValueOf(g.code)
+	rt := rv.Type()
+
+	name := g.name
 	argTypes := make([]Type, 0, rt.NumIn())
 	for i := 0; i < rt.NumIn(); i++ {
 		argTypes = append(argTypes, typeMap[rt.In(i)])
 	}
 
+	args := make([]reflect.Value, 0, rt.NumIn())
 	return func(state *lua.LState) int {
-		if state.GetTop() != argCount {
-			state.RaiseError("%s expects %d arguments, but got %d", name, argCount, state.GetTop())
+		if state.GetTop() != len(argTypes) {
+			state.RaiseError("%s expects %d arguments, but got %d", name, len(argTypes), state.GetTop())
 			return 0
 		}
 
 		// Convert the arguments
-		args := make([]reflect.Value, 0, argCount)
+		args = args[:0]
 		for i, arg := range argTypes {
 			switch arg {
 			case TypeString:
@@ -75,7 +78,7 @@ func generate(name string, function interface{}) (lua.LGFunction, error) {
 			state.Push(luaValueOf(out[0]))
 			return 1
 		}
-	}, nil
+	}
 }
 
 // Register registers a function into the module.
@@ -85,16 +88,15 @@ func (m *Module) Register(name string, function interface{}) error {
 
 	// Lazily create the function map
 	if m.funcs == nil {
-		m.funcs = make(map[string]lua.LGFunction, 2)
+		m.funcs = make(map[string]fngen, 2)
 	}
 
-	// Generate the function
-	f, err := generate(name, function)
-	if err != nil {
+	// Validate the function
+	if err := validate(name, function); err != nil {
 		return err
 	}
 
-	m.funcs[name] = f
+	m.funcs[name] = fngen{name: name, code: function}
 	return nil
 }
 
@@ -107,16 +109,23 @@ func (m *Module) Unregister(name string) {
 
 // Inject loads the module into the state
 func (m *Module) inject(state *lua.LState) {
+	table := make(map[string]lua.LGFunction, len(m.funcs))
+	for name, g := range m.funcs {
+		table[name] = g.generate()
+	}
+
 	state.PreloadModule(m.Name, func(state *lua.LState) int {
-		mod := state.SetFuncs(state.NewTable(), m.funcs)
+		mod := state.SetFuncs(state.NewTable(), table)
 		state.SetField(mod, "version", lua.LString(m.Version))
 		state.Push(mod)
 		return 1
 	})
 }
 
-// isValidFunction validates the function type
-func isValidFunction(rt reflect.Type) error {
+// validate validates the function type
+func validate(name string, function interface{}) error {
+	rv := reflect.ValueOf(function)
+	rt := rv.Type()
 	if rt.Kind() != reflect.Func {
 		return fmt.Errorf("lua: input is a %s, not a function", rt.Kind().String())
 	}
