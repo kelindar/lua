@@ -22,17 +22,28 @@ result, err := s.Run(context.Background(), 10)
 println(result.String()) // Output: 89
 ```
 
-## Future improvements
+The library also supports passing complex data types, thanks to [gopher-luar](layeh.com/gopher-luar). In the example below we create a `Person` struct and update its name in LUA as a side-effect of the script. It also returns the updated name back as a string.
 
-Future improvements might include:
-* Maintaining a pool of VMs per Script instance for highly concurrent script execution.
-* Support for input structs and tables
-* Support for output structs and tables
+```
+// Load the script
+s, err := FromString("test.lua", `
+    function main(input)
+        input.Name = "Updated"
+        return input.Name
+    end
+`)
+
+input := &Person{ Name: "Roman" }
+out, err := s.Run(context.Background(), input)
+println(out)         // Outputs: "Updated"
+println(input.Name)  // Outputs: "Updated"
+```
 
 
 ## Benchmarks
 
 ```
-Benchmark_Serial/fib-8         	 6046147	       197 ns/op	      16 B/op	       2 allocs/op
-Benchmark_Serial/empty-8       	 9117265	       131 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Serial/fib-8         	 5870025	       203 ns/op	      16 B/op	       2 allocs/op
+Benchmark_Serial/empty-8       	 8592448	       137 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Serial/update-8      	 1000000	      1069 ns/op	     224 B/op	      14 allocs/op
 ```

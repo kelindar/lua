@@ -14,6 +14,7 @@ import (
 
 	lua "github.com/yuin/gopher-lua"
 	"github.com/yuin/gopher-lua/parse"
+	"layeh.com/gopher-luar"
 )
 
 var (
@@ -55,8 +56,7 @@ func (s *Script) Run(ctx context.Context, args ...interface{}) (Value, error) {
 	exec.SetContext(ctx)
 	exec.Push(s.main)
 	for _, arg := range args {
-		exec.Push(luaValueOf(arg))
-
+		exec.Push(luar.New(exec, arg))
 	}
 
 	// Call the main function

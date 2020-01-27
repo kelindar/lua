@@ -1,4 +1,4 @@
 function main(input)
-    print(input)
-    return 1
+    local text = "Hello, " .. input.Name .. "!"
+    return text
 end

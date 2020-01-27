@@ -16,6 +16,69 @@ func newScript(file string) (*Script, error) {
 	return FromReader("test.lua", f)
 }
 
+type Person struct {
+	Name string
+}
+
+// Benchmark_Serial/fib-8         	 5870025	       203 ns/op	      16 B/op	       2 allocs/op
+// Benchmark_Serial/empty-8       	 8592448	       137 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Serial/update-8      	 1000000	      1069 ns/op	     224 B/op	      14 allocs/op
+func Benchmark_Serial(b *testing.B) {
+	b.Run("fib", func(b *testing.B) {
+		s, _ := newScript("fixtures/fib.lua")
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background(), 1)
+		}
+	})
+
+	b.Run("empty", func(b *testing.B) {
+		s, _ := newScript("fixtures/empty.lua")
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background())
+		}
+	})
+
+	b.Run("update", func(b *testing.B) {
+		s, _ := newScript("fixtures/update.lua")
+		input := &Person{Name: "Roman"}
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background(), input)
+		}
+	})
+}
+
+// Benchmark_Fib_Parallel-8   	 4951480	       242 ns/op	      16 B/op	       2 allocs/op
+func Benchmark_Fib_Parallel(b *testing.B) {
+	s, _ := newScript("fixtures/fib.lua")
+	b.ReportAllocs()
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			s.Run(context.Background(), 1)
+		}
+	})
+}
+
+func Test_Update(t *testing.T) {
+	s, err := newScript("fixtures/update.lua")
+	assert.NoError(t, err)
+
+	input := &Person{
+		Name: "Roman",
+	}
+	out, err := s.Run(context.Background(), input)
+	assert.NoError(t, err)
+	assert.Equal(t, TypeString, out.Type())
+	assert.Equal(t, "Updated", input.Name)
+	assert.Equal(t, "Updated", out.String())
+}
+
 func Test_Fib(t *testing.T) {
 
 	s, err := newScript("fixtures/fib.lua")
@@ -40,36 +103,14 @@ func Test_Empty(t *testing.T) {
 	assert.Equal(t, TypeNil, out.Type())
 }
 
-// Benchmark_Serial/fib-8         	 6046147	       197 ns/op	      16 B/op	       2 allocs/op
-// Benchmark_Serial/empty-8       	 9117265	       131 ns/op	       0 B/op	       0 allocs/op
-func Benchmark_Serial(b *testing.B) {
-	b.Run("fib", func(b *testing.B) {
-		s, _ := newScript("fixtures/fib.lua")
-		b.ReportAllocs()
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			s.Run(context.Background(), 1)
-		}
-	})
+func Test_Print(t *testing.T) {
+	s, err := newScript("fixtures/print.lua")
+	assert.NoError(t, err)
 
-	b.Run("empty", func(b *testing.B) {
-		s, _ := newScript("fixtures/empty.lua")
-		b.ReportAllocs()
-		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
-			s.Run(context.Background())
-		}
+	out, err := s.Run(context.Background(), &Person{
+		Name: "Roman",
 	})
-}
-
-// Benchmark_Fib_Parallel-8   	 4951480	       242 ns/op	      16 B/op	       2 allocs/op
-func Benchmark_Fib_Parallel(b *testing.B) {
-	s, _ := newScript("fixtures/fib.lua")
-	b.ReportAllocs()
-	b.ResetTimer()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			s.Run(context.Background(), 1)
-		}
-	})
+	assert.NoError(t, err)
+	assert.Equal(t, TypeString, out.Type())
+	assert.Equal(t, "Hello, Roman!", out.String())
 }
