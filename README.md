@@ -22,7 +22,7 @@ result, err := s.Run(context.Background(), 10)
 println(result.String()) // Output: 89
 ```
 
-The library also supports passing complex data types, thanks to [gopher-luar](layeh.com/gopher-luar). In the example below we create a `Person` struct and update its name in LUA as a side-effect of the script. It also returns the updated name back as a string.
+The library also supports passing complex data types, thanks to [gopher-luar](https://github.com/layeh/gopher-luar). In the example below we create a `Person` struct and update its name in LUA as a side-effect of the script. It also returns the updated name back as a string.
 
 ```
 // Load the script
