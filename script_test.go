@@ -124,3 +124,61 @@ func Test_Print(t *testing.T) {
 	assert.Equal(t, TypeString, out.Type())
 	assert.Equal(t, "Hello, Roman!", out.String())
 }
+
+func Test_InvalidScript(t *testing.T) {
+	_, err := FromString("", `
+	xxx main()
+		local x = 1
+	end`)
+	assert.Error(t, err)
+}
+
+func Test_NoMain(t *testing.T) {
+	{
+		s := new(Script)
+		_, err := s.Run(context.Background())
+		assert.Error(t, err)
+	}
+
+	{
+		_, err := FromString("", `main = 1`)
+		assert.Error(t, err)
+	}
+
+	{
+		_, err := FromString("", `
+		function notmain()
+			local x = 1
+		end`)
+		assert.Error(t, err)
+	}
+
+	{
+		_, err := FromString("", `
+		function xxx()
+			local x = 1
+		end`)
+		assert.Error(t, err)
+	}
+}
+
+func Test_Error(t *testing.T) {
+	{
+		_, err := FromString("", `
+		error() 
+		function main()
+			local x = 1
+		end`)
+		assert.Error(t, err)
+	}
+
+	{
+		s, err := FromString("", `
+		function main()
+			error() 
+		end`)
+		assert.NoError(t, err)
+		_, err = s.Run(context.Background())
+		assert.Error(t, err)
+	}
+}

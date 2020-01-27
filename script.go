@@ -68,7 +68,7 @@ func (s *Script) Run(ctx context.Context, args ...interface{}) (Value, error) {
 
 	// Pop the returned value
 	result := exec.Get(-1)
-	s.exec.Pop(1)
+	exec.Pop(1)
 	return resultOf(result), nil
 }
 
@@ -118,11 +118,7 @@ func (s *Script) compile(r io.Reader) (*lua.FunctionProto, error) {
 	}
 
 	// Compile into a function
-	proto, err := lua.Compile(chunk, s.name)
-	if err != nil {
-		return nil, err
-	}
-	return proto, nil
+	return lua.Compile(chunk, s.name)
 }
 
 // Close closes the script and cleanly disposes of its resources.
@@ -150,12 +146,8 @@ func newVM() *lua.LState {
 // findFunction extracts a global function
 func findFunction(runtime *lua.LState, name string) (*lua.LFunction, error) {
 	fn := runtime.GetGlobal(name)
-	if fn == nil {
+	if fn == nil || fn.Type() != lua.LTFunction {
 		return nil, fmt.Errorf("lua: %s() function not found", name)
-	}
-
-	if fn.Type() != lua.LTFunction {
-		return nil, fmt.Errorf("lua: %s() is %s, not a function", name, fn.Type())
 	}
 
 	return fn.(*lua.LFunction), nil
