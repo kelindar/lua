@@ -14,6 +14,10 @@ func TestValueOf(t *testing.T) {
 		input  interface{}
 		output Value
 	}{
+		{input: complex64(1), output: Nil{}},
+		{input: Number(1), output: Number(1)},
+		{input: Bool(true), output: Bool(true)},
+		{input: String("hi"), output: String("hi")},
 		{input: int(1), output: Number(1)},
 		{input: int8(1), output: Number(1)},
 		{input: int16(1), output: Number(1)},
@@ -30,5 +34,6 @@ func TestValueOf(t *testing.T) {
 
 	for _, tc := range tests {
 		assert.Equal(t, tc.output, ValueOf(tc.input))
+		assert.NotEmpty(t, tc.output.String())
 	}
 }
