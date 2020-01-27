@@ -9,6 +9,19 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func newTestValue(typ Type) Value {
+	switch typ {
+	case TypeNumber:
+		return Number(1)
+	case TypeString:
+		return String("x")
+	case TypeBool:
+		return Bool(true)
+	default:
+		return Nil{}
+	}
+}
+
 func TestValueOf(t *testing.T) {
 	tests := []struct {
 		input  interface{}

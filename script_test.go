@@ -53,7 +53,21 @@ func Benchmark_Serial(b *testing.B) {
 		}
 	})
 
-	b.Run("module", func(b *testing.B) {
+}
+
+// Benchmark_Module/echo-8         	 3467438	       346 ns/op	      48 B/op	       3 allocs/op
+// Benchmark_Module/hash-8         	 3323775	       359 ns/op	      48 B/op	       5 allocs/op
+func Benchmark_Module(b *testing.B) {
+	b.Run("echo", func(b *testing.B) {
+		s, _ := newScript("fixtures/echo.lua")
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background(), "abc")
+		}
+	})
+
+	b.Run("hash", func(b *testing.B) {
 		s, _ := newScript("fixtures/hash.lua")
 		b.ReportAllocs()
 		b.ResetTimer()

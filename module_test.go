@@ -17,7 +17,12 @@ func testModule() *Module {
 		Version: "1.0.0",
 	}
 	m.Register("hash", hash)
+	m.Register("echo", echo)
 	return m
+}
+
+func echo(v String) (String, error) {
+	return v, nil
 }
 
 func hash(s String) (Number, error) {

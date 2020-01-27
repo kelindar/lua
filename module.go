@@ -17,6 +17,8 @@ var (
 	errFuncOutput = errors.New("lua: function return values must be either (error) or (lua.Value, error)")
 )
 
+var builtin = make(map[reflect.Type]func(interface{}) lua.LGFunction, 8)
+
 // Module represents a loadable module
 type Module struct {
 	lock    sync.Mutex
@@ -34,6 +36,9 @@ type fngen struct {
 func (g *fngen) generate() lua.LGFunction {
 	rv := reflect.ValueOf(g.code)
 	rt := rv.Type()
+	if maker, ok := builtin[rt]; ok {
+		return maker(g.code)
+	}
 
 	name := g.name
 	argTypes := make([]Type, 0, rt.NumIn())
