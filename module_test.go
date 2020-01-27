@@ -18,7 +18,12 @@ func testModule() *Module {
 	}
 	m.Register("hash", hash)
 	m.Register("echo", echo)
+	m.Register("sum", sum)
 	return m
+}
+
+func sum(a, b Number) (Number, error) {
+	return a + b, nil
 }
 
 func echo(v String) (String, error) {
@@ -40,7 +45,16 @@ func Test_Hash(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, TypeNumber, out.Type())
 	assert.Equal(t, int64(4282878506), int64(out.(Number)))
+}
 
+func Test_Sum(t *testing.T) {
+	s, err := newScript("fixtures/sum.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), 2, 3)
+	assert.NoError(t, err)
+	assert.Equal(t, TypeNumber, out.Type())
+	assert.Equal(t, int64(5), int64(out.(Number)))
 }
 
 func Test_NotAFunc(t *testing.T) {

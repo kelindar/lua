@@ -12,18 +12,14 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func funcStringString(v String) (String, error) {
-	return newTestValue(TypeString).(String), nil
-}
-
-func funcStringStringWithErr(v String) (String, error) {
-	return newTestValue(TypeString).(String), errors.New("boom")
-}
-
 func Test_StringString(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcStringString)
-	m.Register("test2", funcStringStringWithErr)
+	m.Register("test1", func(v String) (String, error) {
+		return newTestValue(TypeString).(String), nil
+	})
+	m.Register("test2", func(v String) (String, error) {
+		return newTestValue(TypeString).(String), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -48,20 +44,16 @@ func Test_StringString(t *testing.T) {
 		_, err = s.Run(context.Background(), newTestValue(TypeString).(String))
 		assert.Error(t, err)
 	}
-}
-
-func funcStringNumber(v String) (Number, error) {
-	return newTestValue(TypeNumber).(Number), nil
-}
-
-func funcStringNumberWithErr(v String) (Number, error) {
-	return newTestValue(TypeNumber).(Number), errors.New("boom")
 }
 
 func Test_StringNumber(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcStringNumber)
-	m.Register("test2", funcStringNumberWithErr)
+	m.Register("test1", func(v String) (Number, error) {
+		return newTestValue(TypeNumber).(Number), nil
+	})
+	m.Register("test2", func(v String) (Number, error) {
+		return newTestValue(TypeNumber).(Number), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -86,20 +78,16 @@ func Test_StringNumber(t *testing.T) {
 		_, err = s.Run(context.Background(), newTestValue(TypeString).(String))
 		assert.Error(t, err)
 	}
-}
-
-func funcStringBool(v String) (Bool, error) {
-	return newTestValue(TypeBool).(Bool), nil
-}
-
-func funcStringBoolWithErr(v String) (Bool, error) {
-	return newTestValue(TypeBool).(Bool), errors.New("boom")
 }
 
 func Test_StringBool(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcStringBool)
-	m.Register("test2", funcStringBoolWithErr)
+	m.Register("test1", func(v String) (Bool, error) {
+		return newTestValue(TypeBool).(Bool), nil
+	})
+	m.Register("test2", func(v String) (Bool, error) {
+		return newTestValue(TypeBool).(Bool), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -124,20 +112,16 @@ func Test_StringBool(t *testing.T) {
 		_, err = s.Run(context.Background(), newTestValue(TypeString).(String))
 		assert.Error(t, err)
 	}
-}
-
-func funcNumberString(v Number) (String, error) {
-	return newTestValue(TypeString).(String), nil
-}
-
-func funcNumberStringWithErr(v Number) (String, error) {
-	return newTestValue(TypeString).(String), errors.New("boom")
 }
 
 func Test_NumberString(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcNumberString)
-	m.Register("test2", funcNumberStringWithErr)
+	m.Register("test1", func(v Number) (String, error) {
+		return newTestValue(TypeString).(String), nil
+	})
+	m.Register("test2", func(v Number) (String, error) {
+		return newTestValue(TypeString).(String), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -162,20 +146,16 @@ func Test_NumberString(t *testing.T) {
 		_, err = s.Run(context.Background(), newTestValue(TypeNumber).(Number))
 		assert.Error(t, err)
 	}
-}
-
-func funcNumberNumber(v Number) (Number, error) {
-	return newTestValue(TypeNumber).(Number), nil
-}
-
-func funcNumberNumberWithErr(v Number) (Number, error) {
-	return newTestValue(TypeNumber).(Number), errors.New("boom")
 }
 
 func Test_NumberNumber(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcNumberNumber)
-	m.Register("test2", funcNumberNumberWithErr)
+	m.Register("test1", func(v Number) (Number, error) {
+		return newTestValue(TypeNumber).(Number), nil
+	})
+	m.Register("test2", func(v Number) (Number, error) {
+		return newTestValue(TypeNumber).(Number), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -200,20 +180,16 @@ func Test_NumberNumber(t *testing.T) {
 		_, err = s.Run(context.Background(), newTestValue(TypeNumber).(Number))
 		assert.Error(t, err)
 	}
-}
-
-func funcNumberBool(v Number) (Bool, error) {
-	return newTestValue(TypeBool).(Bool), nil
-}
-
-func funcNumberBoolWithErr(v Number) (Bool, error) {
-	return newTestValue(TypeBool).(Bool), errors.New("boom")
 }
 
 func Test_NumberBool(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcNumberBool)
-	m.Register("test2", funcNumberBoolWithErr)
+	m.Register("test1", func(v Number) (Bool, error) {
+		return newTestValue(TypeBool).(Bool), nil
+	})
+	m.Register("test2", func(v Number) (Bool, error) {
+		return newTestValue(TypeBool).(Bool), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -238,20 +214,16 @@ func Test_NumberBool(t *testing.T) {
 		_, err = s.Run(context.Background(), newTestValue(TypeNumber).(Number))
 		assert.Error(t, err)
 	}
-}
-
-func funcBoolString(v Bool) (String, error) {
-	return newTestValue(TypeString).(String), nil
-}
-
-func funcBoolStringWithErr(v Bool) (String, error) {
-	return newTestValue(TypeString).(String), errors.New("boom")
 }
 
 func Test_BoolString(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcBoolString)
-	m.Register("test2", funcBoolStringWithErr)
+	m.Register("test1", func(v Bool) (String, error) {
+		return newTestValue(TypeString).(String), nil
+	})
+	m.Register("test2", func(v Bool) (String, error) {
+		return newTestValue(TypeString).(String), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -276,20 +248,16 @@ func Test_BoolString(t *testing.T) {
 		_, err = s.Run(context.Background(), newTestValue(TypeBool).(Bool))
 		assert.Error(t, err)
 	}
-}
-
-func funcBoolNumber(v Bool) (Number, error) {
-	return newTestValue(TypeNumber).(Number), nil
-}
-
-func funcBoolNumberWithErr(v Bool) (Number, error) {
-	return newTestValue(TypeNumber).(Number), errors.New("boom")
 }
 
 func Test_BoolNumber(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcBoolNumber)
-	m.Register("test2", funcBoolNumberWithErr)
+	m.Register("test1", func(v Bool) (Number, error) {
+		return newTestValue(TypeNumber).(Number), nil
+	})
+	m.Register("test2", func(v Bool) (Number, error) {
+		return newTestValue(TypeNumber).(Number), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
@@ -316,18 +284,14 @@ func Test_BoolNumber(t *testing.T) {
 	}
 }
 
-func funcBoolBool(v Bool) (Bool, error) {
-	return newTestValue(TypeBool).(Bool), nil
-}
-
-func funcBoolBoolWithErr(v Bool) (Bool, error) {
-	return newTestValue(TypeBool).(Bool), errors.New("boom")
-}
-
 func Test_BoolBool(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcBoolBool)
-	m.Register("test2", funcBoolBoolWithErr)
+	m.Register("test1", func(v Bool) (Bool, error) {
+		return newTestValue(TypeBool).(Bool), nil
+	})
+	m.Register("test2", func(v Bool) (Bool, error) {
+		return newTestValue(TypeBool).(Bool), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `

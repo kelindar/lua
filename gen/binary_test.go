@@ -8,20 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:generate genny -in=$GOFILE -out=../z_funcs_test.go gen "TIn=String,Number,Bool TOut=String,Number,Bool"
-
-func funcTInTOut(v TIn) (TOut, error) {
-	return newTestValue(TypeTOut).(TOut), nil
-}
-
-func funcTInTOutWithErr(v TIn) (TOut, error) {
-	return newTestValue(TypeTOut).(TOut), errors.New("boom")
-}
+//go:generate genny -in=$GOFILE -out=../z_binary_test.go gen "TIn=String,Number,Bool TOut=String,Number,Bool"
 
 func Test_TInTOut(t *testing.T) {
 	m := &Module{Name: "test"}
-	m.Register("test1", funcTInTOut)
-	m.Register("test2", funcTInTOutWithErr)
+	m.Register("test1", func(v TIn) (TOut, error) {
+		return newTestValue(TypeTOut).(TOut), nil
+	})
+	m.Register("test2", func(v TIn) (TOut, error) {
+		return newTestValue(TypeTOut).(TOut), errors.New("boom")
+	})
 
 	{ // Happy path
 		s, err := FromString("", `
