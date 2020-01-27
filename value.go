@@ -8,64 +8,100 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
+// Type represents a type of the value
+type Type byte
+
+// Various supported types
+const (
+	TypeNil = Type(iota)
+	TypeBool
+	TypeNumber
+	TypeString
+)
+
 // Value represents a returned
 type Value interface {
 	fmt.Stringer
-	IsBoolean() bool
-	IsNumber() bool
-	IsString() bool
-	ToBoolean() bool
-	ToNumber() float64
-	ToString() string
+	Type() Type
 }
 
 // ValueOf converts a value to a LUA-friendly one.
 func ValueOf(i interface{}) Value {
-	return value{luaValueOf(i)}
+	return resultOf(luaValueOf(i))
 }
 
-// value represents a LUA value
-type value struct {
-	lua.LValue
-}
-
-// String implements Stringer interface.
-func (v value) String() string {
-	return v.LValue.String()
-}
-
-// --------------------------------------------------------------------
-
-// IsBoolean returns whether the value is a boolean.
-func (v value) IsBoolean() bool {
-	return v.LValue.Type() == lua.LTBool
-}
-
-// IsNumber returns whether the value is a number.
-func (v value) IsNumber() bool {
-	return v.LValue.Type() == lua.LTNumber
-}
-
-// IsString returns whether the value is a string.
-func (v value) IsString() bool {
-	return v.LValue.Type() == lua.LTString
+// ValueOf converts a value to a LUA-friendly one.
+func resultOf(i lua.LValue) Value {
+	switch v := i.(type) {
+	case lua.LNumber:
+		return Number(v)
+	case lua.LString:
+		return String(v)
+	case lua.LBool:
+		return Bool(v)
+	default:
+		return Nil{}
+	}
 }
 
 // --------------------------------------------------------------------
 
-// ToBoolean converts the value to a boolean value.
-func (v value) ToBoolean() bool {
-	return lua.LVAsBool(v.LValue)
+// Number represents the numerical value
+type Number float64
+
+// Type returns the type of the value
+func (v Number) Type() Type {
+	return TypeNumber
 }
 
-// ToNumber converts the value to a numerical value.
-func (v value) ToNumber() float64 {
-	return float64(lua.LVAsNumber(v.LValue))
+// String returns the string representation of the value
+func (v Number) String() string {
+	return lua.LNumber(v).String()
 }
 
-// ToString converts the value to a string value.
-func (v value) ToString() string {
-	return lua.LVAsString(v.LValue)
+// --------------------------------------------------------------------
+
+// String represents the string value
+type String string
+
+// Type returns the type of the value
+func (v String) Type() Type {
+	return TypeString
+}
+
+// String returns the string representation of the value
+func (v String) String() string {
+	return lua.LString(v).String()
+}
+
+// --------------------------------------------------------------------
+
+// Bool represents the boolean value
+type Bool bool
+
+// Type returns the type of the value
+func (v Bool) Type() Type {
+	return TypeBool
+}
+
+// String returns the string representation of the value
+func (v Bool) String() string {
+	return lua.LBool(v).String()
+}
+
+// --------------------------------------------------------------------
+
+// Nil represents the nil value
+type Nil struct{}
+
+// Type returns the type of the value
+func (v Nil) Type() Type {
+	return TypeNil
+}
+
+// String returns the string representation of the value
+func (v Nil) String() string {
+	return "(nil)"
 }
 
 // --------------------------------------------------------------------

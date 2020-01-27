@@ -23,8 +23,8 @@ func TestGet(t *testing.T) {
 
 	out, err := s.Run(context.Background(), 10)
 	assert.NoError(t, err)
-	assert.True(t, out.IsNumber())
-	assert.Equal(t, float64(89), out.ToNumber())
+	assert.Equal(t, TypeNumber, out.Type())
+	assert.Equal(t, Number(89), out.(Number))
 	assert.Equal(t, "89", out.String())
 
 	err = s.Close()

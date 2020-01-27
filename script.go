@@ -61,7 +61,7 @@ func (s *Script) Run(ctx context.Context, args ...interface{}) (Value, error) {
 	// Pop the returned value
 	result := s.exec.Get(-1)
 	s.exec.Pop(1)
-	return value{result}, nil
+	return resultOf(result), nil
 }
 
 // Update updates the content of the script.
