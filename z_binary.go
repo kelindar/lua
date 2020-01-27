@@ -21,7 +21,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LString(v))
 			return 1
 		}
 	}
@@ -38,7 +38,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LNumber(v))
 			return 1
 		}
 	}
@@ -55,7 +55,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LBool(v))
 			return 1
 		}
 	}
@@ -72,7 +72,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LString(v))
 			return 1
 		}
 	}
@@ -89,7 +89,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LNumber(v))
 			return 1
 		}
 	}
@@ -106,7 +106,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LBool(v))
 			return 1
 		}
 	}
@@ -123,7 +123,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LString(v))
 			return 1
 		}
 	}
@@ -140,7 +140,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LNumber(v))
 			return 1
 		}
 	}
@@ -157,7 +157,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LBool(v))
 			return 1
 		}
 	}

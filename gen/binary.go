@@ -25,7 +25,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LTOut(v))
 			return 1
 		}
 	}

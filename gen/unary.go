@@ -31,7 +31,7 @@ func init() {
 				return 0
 			}
 
-			state.Push(luaValueOf(v))
+			state.Push(lua.LTIn(v))
 			return 1
 		}
 	}
