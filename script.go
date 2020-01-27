@@ -24,14 +24,16 @@ var (
 type Script struct {
 	lock sync.Mutex
 	name string         // The name of the script
-	args int            // The number of arguments
+	argn int            // The number of arguments
 	exec *lua.LState    // The runtime for the script
 	main *lua.LFunction // The main function
 }
 
 // FromReader reads a script fron an io.Reader
 func FromReader(name string, r io.Reader) (*Script, error) {
-	script := &Script{name: name}
+	script := &Script{
+		name: name,
+	}
 	return script, script.Update(r)
 }
 
@@ -48,18 +50,22 @@ func (s *Script) Run(ctx context.Context, args ...interface{}) (Value, error) {
 		return nil, errInvalidScript
 	}
 
+	// Push the arguments into the state
+	exec := s.exec
+	exec.SetContext(ctx)
+	exec.Push(s.main)
+	for _, arg := range args {
+		exec.Push(luaValueOf(arg))
+
+	}
+
 	// Call the main function
-	s.exec.SetContext(ctx)
-	if err := s.exec.CallByParam(lua.P{
-		Fn:      s.main,
-		NRet:    1,
-		Protect: true,
-	}, luaValuesOf(args)...); err != nil {
+	if err := exec.PCall(len(args), 1, nil); err != nil {
 		return nil, err
 	}
 
 	// Pop the returned value
-	result := s.exec.Get(-1)
+	result := exec.Get(-1)
 	s.exec.Pop(1)
 	return resultOf(result), nil
 }
@@ -90,7 +96,7 @@ func (s *Script) Update(r io.Reader) error {
 	// Make sure the most recent code is present in the state
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	s.args = int(mainFn.Proto.NumParameters)
+	s.argn = int(mainFn.Proto.NumParameters)
 	s.exec = runtime
 	s.main = mainFn
 	return nil

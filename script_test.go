@@ -31,15 +31,29 @@ func TestGet(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func Benchmark_Fib_Serial(b *testing.B) {
-	s, _ := newScript("fixtures/fib.lua")
-	b.ReportAllocs()
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		s.Run(context.Background(), 1)
-	}
+// Benchmark_Serial/fib-8         	 6138716	       196 ns/op	      16 B/op	       2 allocs/op
+// Benchmark_Serial/empty-8       	 7206128	       167 ns/op	       8 B/op	       1 allocs/op
+func Benchmark_Serial(b *testing.B) {
+	b.Run("fib", func(b *testing.B) {
+		s, _ := newScript("fixtures/fib.lua")
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background(), 1)
+		}
+	})
+
+	b.Run("empty", func(b *testing.B) {
+		s, _ := newScript("fixtures/empty.lua")
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background())
+		}
+	})
 }
 
+// Benchmark_Fib_Parallel-8   	 4149006	       286 ns/op	      32 B/op	       3 allocs/op
 func Benchmark_Fib_Parallel(b *testing.B) {
 	s, _ := newScript("fixtures/fib.lua")
 	b.ReportAllocs()

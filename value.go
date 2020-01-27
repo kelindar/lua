@@ -31,14 +31,14 @@ func ValueOf(i interface{}) Value {
 }
 
 // ValueOf converts a value to a LUA-friendly one.
-func resultOf(i lua.LValue) Value {
-	switch v := i.(type) {
-	case lua.LNumber:
-		return Number(v)
-	case lua.LString:
-		return String(v)
-	case lua.LBool:
-		return Bool(v)
+func resultOf(v lua.LValue) Value {
+	switch v.Type() {
+	case lua.LTNumber:
+		return Number(v.(lua.LNumber))
+	case lua.LTString:
+		return String(v.(lua.LString))
+	case lua.LTBool:
+		return Bool(v.(lua.LBool))
 	default:
 		return Nil{}
 	}
@@ -106,18 +106,15 @@ func (v Nil) String() string {
 
 // --------------------------------------------------------------------
 
-// luaValuesOf converts a set of values to a LUA-friendly ones.
-func luaValuesOf(i []interface{}) []lua.LValue {
-	out := make([]lua.LValue, 0, len(i))
-	for _, v := range i {
-		out = append(out, luaValueOf(v))
-	}
-	return out
-}
-
 // luaValueOf converts a value to a LUA-friendly one.
 func luaValueOf(i interface{}) lua.LValue {
 	switch v := i.(type) {
+	case Number:
+		return lua.LNumber(v)
+	case String:
+		return lua.LString(v)
+	case Bool:
+		return lua.LBool(v)
 	case int:
 		return lua.LNumber(v)
 	case int8:
