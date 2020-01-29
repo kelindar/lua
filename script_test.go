@@ -18,6 +18,7 @@ func newScript(file string) (*Script, error) {
 
 type Person struct {
 	Name string
+	Age  int
 }
 
 // Benchmark_Serial/fib-8         	 5870025	       203 ns/op	      16 B/op	       2 allocs/op
@@ -92,6 +93,7 @@ func Benchmark_Fib_Parallel(b *testing.B) {
 func Test_Update(t *testing.T) {
 	s, err := newScript("fixtures/update.lua")
 	assert.NoError(t, err)
+	assert.Equal(t, "test.lua", s.Name())
 
 	input := &Person{
 		Name: "Roman",
@@ -195,4 +197,23 @@ func Test_Error(t *testing.T) {
 		_, err = s.Run(context.Background())
 		assert.Error(t, err)
 	}
+}
+
+func Test_JSON(t *testing.T) {
+	input := map[string]interface{}{
+		"a": 123,
+		"b": "hello",
+		"c": 10.15,
+		"d": true,
+		"e": &Person{Name: "Roman", Age: 15},
+	}
+
+	s, err := newScript("fixtures/json.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), input)
+	assert.NoError(t, err)
+	assert.Equal(t, TypeString, out.Type())
+	assert.Equal(t, `{"a":123,"b":"hello","c":10.15,"d":true,"e":{"Name":"Roman","Age":15}}`,
+		out.String())
 }

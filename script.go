@@ -12,8 +12,10 @@ import (
 	"io"
 	"sync"
 
+	"github.com/kelindar/lua/json"
 	lua "github.com/yuin/gopher-lua"
 	"github.com/yuin/gopher-lua/parse"
+	//"layeh.com/gopher-json"
 	"layeh.com/gopher-luar"
 )
 
@@ -43,6 +45,11 @@ func FromReader(name string, r io.Reader, modules ...*Module) (*Script, error) {
 // FromString reads a script fron a string
 func FromString(name, code string, modules ...*Module) (*Script, error) {
 	return FromReader(name, bytes.NewBufferString(code), modules...)
+}
+
+// Name returns the name of the script
+func (s *Script) Name() string {
+	return s.name
 }
 
 // Run runs the main function of the script with arguments.
@@ -85,6 +92,7 @@ func (s *Script) Update(r io.Reader) error {
 	runtime.Push(codeFn)
 
 	// Inject the modules
+	runtime.PreloadModule("json", json.Loader)
 	for _, m := range s.mods {
 		m.inject(runtime)
 	}
