@@ -11,7 +11,7 @@ import (
 //go:generate genny -in=$GOFILE -out=../z_binary_test.go gen "TIn=String,Number,Bool TOut=String,Number,Bool"
 
 func Test_TInTOut(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v TIn) (TOut, error) {
 		return newTestValue(TypeTOut).(TOut), nil
 	})

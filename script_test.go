@@ -11,9 +11,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newScript(file string) (*Script, error) {
+func newScript(file string, mods ...Module) (*Script, error) {
 	f, _ := os.Open(file)
-	return FromReader("test.lua", f, testModule())
+	mods = append(mods, testModule())
+	return FromReader("test.lua", f, mods...)
 }
 
 type Person struct {
@@ -24,7 +25,6 @@ type Person struct {
 // Benchmark_Serial/fib-8         	 5870025	       203 ns/op	      16 B/op	       2 allocs/op
 // Benchmark_Serial/empty-8       	 8592448	       137 ns/op	       0 B/op	       0 allocs/op
 // Benchmark_Serial/update-8      	 1000000	      1069 ns/op	     224 B/op	      14 allocs/op
-// Benchmark_Serial/module-8      	 1900801	       629 ns/op	     160 B/op	       8 allocs/op
 func Benchmark_Serial(b *testing.B) {
 	b.Run("fib", func(b *testing.B) {
 		s, _ := newScript("fixtures/fib.lua")
@@ -157,23 +157,32 @@ func Test_NoMain(t *testing.T) {
 	}
 
 	{
-		_, err := FromString("", `main = 1`)
+		s, err := FromString("", `main = 1`)
+		assert.NoError(t, err)
+
+		_, err = s.Run(context.Background())
 		assert.Error(t, err)
 	}
 
 	{
-		_, err := FromString("", `
+		s, err := FromString("", `
 		function notmain()
 			local x = 1
 		end`)
+		assert.NoError(t, err)
+
+		_, err = s.Run(context.Background())
 		assert.Error(t, err)
 	}
 
 	{
-		_, err := FromString("", `
+		s, err := FromString("", `
 		function xxx()
 			local x = 1
 		end`)
+		assert.NoError(t, err)
+
+		_, err = s.Run(context.Background())
 		assert.Error(t, err)
 	}
 }

@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testModule() *Module {
-	m := &Module{
+func testModule() Module {
+	m := &NativeModule{
 		Name:    "test",
 		Version: "1.0.0",
 	}
@@ -58,7 +58,7 @@ func Test_Sum(t *testing.T) {
 }
 
 func Test_NotAFunc(t *testing.T) {
-	m := &Module{
+	m := &NativeModule{
 		Name:    "test",
 		Version: "1.0.0",
 	}
@@ -67,4 +67,26 @@ func Test_NotAFunc(t *testing.T) {
 	assert.Equal(t, 1, len(m.funcs))
 	m.Unregister("hash")
 	assert.Equal(t, 0, len(m.funcs))
+}
+
+func Test_ScriptModule(t *testing.T) {
+
+	m, err := newScript("fixtures/module.lua")
+	assert.NoError(t, err)
+
+	s, err := newScript("fixtures/demo.lua", &ScriptModule{
+		Script:  m,
+		Name:    "demo_mod",
+		Version: "1.0.0",
+	})
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), 10, m)
+	assert.NoError(t, err)
+	assert.Equal(t, TypeNumber, out.Type())
+	assert.Equal(t, Number(25), out.(Number))
+	assert.Equal(t, "25", out.String())
+
+	err = s.Close()
+	assert.NoError(t, err)
 }

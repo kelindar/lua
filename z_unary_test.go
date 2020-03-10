@@ -13,7 +13,7 @@ import (
 )
 
 func Test_In_String(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v String) error {
 		return nil
 	})
@@ -47,7 +47,7 @@ func Test_In_String(t *testing.T) {
 }
 
 func Test_Out_String(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func() (String, error) {
 		return newTestValue(TypeString).(String), nil
 	})
@@ -81,7 +81,7 @@ func Test_Out_String(t *testing.T) {
 }
 
 func Test_In_Number(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Number) error {
 		return nil
 	})
@@ -115,7 +115,7 @@ func Test_In_Number(t *testing.T) {
 }
 
 func Test_Out_Number(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func() (Number, error) {
 		return newTestValue(TypeNumber).(Number), nil
 	})
@@ -149,7 +149,7 @@ func Test_Out_Number(t *testing.T) {
 }
 
 func Test_In_Bool(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Bool) error {
 		return nil
 	})
@@ -183,7 +183,7 @@ func Test_In_Bool(t *testing.T) {
 }
 
 func Test_Out_Bool(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func() (Bool, error) {
 		return newTestValue(TypeBool).(Bool), nil
 	})

@@ -12,6 +12,12 @@ import (
 	"github.com/yuin/gopher-lua"
 )
 
+var (
+	errNested      = errors.New("cannot encode recursively nested tables to JSON")
+	errSparseArray = errors.New("cannot encode sparse array")
+	errInvalidKeys = errors.New("cannot encode mixed or invalid key types")
+)
+
 // Loader is the module loader function.
 func Loader(L *lua.LState) int {
 	t := L.NewTable()
@@ -51,11 +57,7 @@ func apiEncode(L *lua.LState) int {
 	return 1
 }
 
-var (
-	errNested      = errors.New("cannot encode recursively nested tables to JSON")
-	errSparseArray = errors.New("cannot encode sparse array")
-	errInvalidKeys = errors.New("cannot encode mixed or invalid key types")
-)
+// --------------------------------------------------------------------
 
 type invalidTypeError lua.LValueType
 

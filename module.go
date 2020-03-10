@@ -19,8 +19,43 @@ var (
 
 var builtin = make(map[reflect.Type]func(interface{}) lua.LGFunction, 8)
 
-// Module represents a loadable module
-type Module struct {
+// Module represents a loadable module.
+type Module interface {
+	inject(state *lua.LState) error
+}
+
+// --------------------------------------------------------------------
+
+// ScriptModule represents a loadable module written in LUA itself.
+type ScriptModule struct {
+	Script  *Script // The script that contains the module
+	Name    string  // The name of the module
+	Version string  // The module version string
+}
+
+// Inject loads the module into the state
+func (m *ScriptModule) inject(runtime *lua.LState) error {
+
+	// Inject the prerequisite modules of the module
+	if err := m.Script.loadModules(runtime); err != nil {
+		return err
+	}
+
+	// Push the function to the runtime
+	codeFn := runtime.NewFunctionFromProto(m.Script.code)
+	preload := runtime.GetField(runtime.GetField(runtime.Get(lua.EnvironIndex), "package"), "preload")
+	if _, ok := preload.(*lua.LTable); !ok {
+		return errors.New("package.preload must be a table")
+
+	}
+	runtime.SetField(preload, m.Name, codeFn)
+	return nil
+}
+
+// --------------------------------------------------------------------
+
+// NativeModule represents a loadable native module.
+type NativeModule struct {
 	lock    sync.Mutex
 	funcs   map[string]fngen
 	Name    string // The name of the module
@@ -87,7 +122,7 @@ func (g *fngen) generate() lua.LGFunction {
 }
 
 // Register registers a function into the module.
-func (m *Module) Register(name string, function interface{}) error {
+func (m *NativeModule) Register(name string, function interface{}) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -106,14 +141,14 @@ func (m *Module) Register(name string, function interface{}) error {
 }
 
 // Unregister unregisters a function from the module.
-func (m *Module) Unregister(name string) {
+func (m *NativeModule) Unregister(name string) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	delete(m.funcs, name)
 }
 
 // Inject loads the module into the state
-func (m *Module) inject(state *lua.LState) {
+func (m *NativeModule) inject(state *lua.LState) error {
 	table := make(map[string]lua.LGFunction, len(m.funcs))
 	for name, g := range m.funcs {
 		table[name] = g.generate()
@@ -125,6 +160,7 @@ func (m *Module) inject(state *lua.LState) {
 		state.Push(mod)
 		return 1
 	})
+	return nil
 }
 
 // validate validates the function type

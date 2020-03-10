@@ -13,7 +13,7 @@ import (
 )
 
 func Test_StringString(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v String) (String, error) {
 		return newTestValue(TypeString).(String), nil
 	})
@@ -47,7 +47,7 @@ func Test_StringString(t *testing.T) {
 }
 
 func Test_StringNumber(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v String) (Number, error) {
 		return newTestValue(TypeNumber).(Number), nil
 	})
@@ -81,7 +81,7 @@ func Test_StringNumber(t *testing.T) {
 }
 
 func Test_StringBool(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v String) (Bool, error) {
 		return newTestValue(TypeBool).(Bool), nil
 	})
@@ -115,7 +115,7 @@ func Test_StringBool(t *testing.T) {
 }
 
 func Test_NumberString(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Number) (String, error) {
 		return newTestValue(TypeString).(String), nil
 	})
@@ -149,7 +149,7 @@ func Test_NumberString(t *testing.T) {
 }
 
 func Test_NumberNumber(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Number) (Number, error) {
 		return newTestValue(TypeNumber).(Number), nil
 	})
@@ -183,7 +183,7 @@ func Test_NumberNumber(t *testing.T) {
 }
 
 func Test_NumberBool(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Number) (Bool, error) {
 		return newTestValue(TypeBool).(Bool), nil
 	})
@@ -217,7 +217,7 @@ func Test_NumberBool(t *testing.T) {
 }
 
 func Test_BoolString(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Bool) (String, error) {
 		return newTestValue(TypeString).(String), nil
 	})
@@ -251,7 +251,7 @@ func Test_BoolString(t *testing.T) {
 }
 
 func Test_BoolNumber(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Bool) (Number, error) {
 		return newTestValue(TypeNumber).(Number), nil
 	})
@@ -285,7 +285,7 @@ func Test_BoolNumber(t *testing.T) {
 }
 
 func Test_BoolBool(t *testing.T) {
-	m := &Module{Name: "test"}
+	m := &NativeModule{Name: "test"}
 	m.Register("test1", func(v Bool) (Bool, error) {
 		return newTestValue(TypeBool).(Bool), nil
 	})
