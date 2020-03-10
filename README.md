@@ -81,7 +81,7 @@ println(out) // Output: 4282878506
 
 ## Script Modules 
 
-Similarly to native modules, the library also supports LUA script modules. 
+Similarly to native modules, the library also supports LUA script modules. In order to use it, first you need to create a script which contains a module and returns a table with the functions. Then, create a `ScriptModule` which points to the script with `Name` which can be used in the `require` statement.
 
 ```
 moduleCode, err := FromString("module.lua", `
@@ -100,7 +100,11 @@ module := &ScriptModule{
     Name:    "demo_mod",
     Version: "1.0.0",
 }
+```
 
+Finally, attach the module to the script as with native modules.
+
+```
 // Load the script
 s, err := FromString("test.lua", `
     local demo = require("demo_mod")
@@ -112,7 +116,7 @@ s, err := FromString("test.lua", `
 
 out, err := s.Run(context.Background())
 println(out) // Output: 25
-
+```
 
 
 ## Benchmarks
