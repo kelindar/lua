@@ -42,7 +42,7 @@ println(out)         // Outputs: "Updated"
 println(input.Name)  // Outputs: "Updated"
 ```
 
-## Modules
+## Native Modules
 
 This library also supports and abstracts modules, which allows you to provide one or multiple native libraries which can be used by the script. These things are just ensembles of functions which are implemented in pure Go. 
 
@@ -56,10 +56,10 @@ func hash(s lua.String) (lua.Number, error) {
 }
 ```
 
-In order to use it, the functions should be registered into a `Module` which then is loaded when script is created.
+In order to use it, the functions should be registered into a `NativeModule` which then is loaded when script is created.
 ```
 // Create a test module which provides hash function
-module := &Module{
+module := &NativeModule{
     Name:    "test",
     Version: "1.0.0",
 }
@@ -78,6 +78,41 @@ out, err := s.Run(context.Background(), "abcdef")
 println(out) // Output: 4282878506
 
 ```
+
+## Script Modules 
+
+Similarly to native modules, the library also supports LUA script modules. 
+
+```
+moduleCode, err := FromString("module.lua", `
+    local demo_mod = {} -- The main table
+
+    function demo_mod.Mult(a, b)
+        return a * b
+    end
+
+    return demo_mod
+`)
+
+// Create a test module which provides hash function
+module := &ScriptModule{
+    Script:  moduleCode,
+    Name:    "demo_mod",
+    Version: "1.0.0",
+}
+
+// Load the script
+s, err := FromString("test.lua", `
+    local demo = require("demo_mod")
+
+    function main(input)
+        return demo.Mult(5, 5)
+    end
+`, module) // <- attach the module
+
+out, err := s.Run(context.Background())
+println(out) // Output: 25
+
 
 
 ## Benchmarks
