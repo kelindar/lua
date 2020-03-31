@@ -98,6 +98,12 @@ func (g *fngen) generate() lua.LGFunction {
 				args = append(args, reflect.ValueOf(Number(state.CheckNumber(i+1))))
 			case TypeBool:
 				args = append(args, reflect.ValueOf(Bool(state.CheckBool(i+1))))
+			case TypeStrings:
+				args = append(args, reflect.ValueOf(resultOfStrings(state.CheckTable(i+1))))
+			case TypeNumbers:
+				args = append(args, reflect.ValueOf(resultOfNumbers(state.CheckTable(i+1))))
+			case TypeBools:
+				args = append(args, reflect.ValueOf(resultOfBools(state.CheckTable(i+1))))
 			}
 		}
 

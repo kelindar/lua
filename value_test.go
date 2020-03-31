@@ -41,12 +41,23 @@ func TestValueOf(t *testing.T) {
 		{input: uint16(1), output: Number(1)},
 		{input: uint32(1), output: Number(1)},
 		{input: uint64(1), output: Number(1)},
+		{input: float32(1), output: Number(1)},
+		{input: float64(1), output: Number(1)},
 		{input: true, output: Bool(true)},
 		{input: "hi", output: String("hi")},
+		{input: []string{"a", "b"}, output: Strings{"a", "b"}},
+		{input: []float64{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []bool{false, true}, output: Bools{false, true}},
 	}
 
 	for _, tc := range tests {
 		assert.Equal(t, tc.output, ValueOf(tc.input))
 		assert.NotEmpty(t, tc.output.String())
+	}
+}
+
+func must(err error) {
+	if err != nil {
+		panic(err)
 	}
 }

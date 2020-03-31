@@ -11,17 +11,23 @@ import (
 )
 
 var (
-	typeError  = reflect.TypeOf((*error)(nil)).Elem()
-	typeValue  = reflect.TypeOf((*Value)(nil)).Elem()
-	typeNumber = reflect.TypeOf(Number(0))
-	typeString = reflect.TypeOf(String(""))
-	typeBool   = reflect.TypeOf(Bool(true))
+	typeError   = reflect.TypeOf((*error)(nil)).Elem()
+	typeValue   = reflect.TypeOf((*Value)(nil)).Elem()
+	typeNumber  = reflect.TypeOf(Number(0))
+	typeString  = reflect.TypeOf(String(""))
+	typeBool    = reflect.TypeOf(Bool(true))
+	typeNumbers = reflect.TypeOf(Numbers(nil))
+	typeStrings = reflect.TypeOf(Strings(nil))
+	typeBools   = reflect.TypeOf(Bools(nil))
 )
 
 var typeMap = map[reflect.Type]Type{
-	typeString: TypeString,
-	typeNumber: TypeNumber,
-	typeBool:   TypeBool,
+	typeString:  TypeString,
+	typeNumber:  TypeNumber,
+	typeBool:    TypeBool,
+	typeStrings: TypeStrings,
+	typeNumbers: TypeNumbers,
+	typeBools:   TypeBools,
 }
 
 // Type represents a type of the value
@@ -33,6 +39,9 @@ const (
 	TypeBool
 	TypeNumber
 	TypeString
+	TypeBools
+	TypeNumbers
+	TypeStrings
 )
 
 // Value represents a returned
@@ -55,9 +64,44 @@ func resultOf(v lua.LValue) Value {
 		return String(v.(lua.LString))
 	case lua.LTBool:
 		return Bool(v.(lua.LBool))
+	case lua.LTTable:
+		table := v.(*lua.LTable)
+		if top := table.RawGetInt(1); top != nil {
+			switch top.Type() {
+			case lua.LTNumber:
+				return resultOfNumbers(table)
+			case lua.LTString:
+				return resultOfStrings(table)
+			case lua.LTBool:
+				return resultOfBools(table)
+			}
+		}
+
+		return Nil{}
 	default:
 		return Nil{}
 	}
+}
+
+func resultOfNumbers(t *lua.LTable) (out Numbers) {
+	t.ForEach(func(_, v lua.LValue) {
+		out = append(out, float64(v.(lua.LNumber)))
+	})
+	return
+}
+
+func resultOfStrings(t *lua.LTable) (out Strings) {
+	t.ForEach(func(_, v lua.LValue) {
+		out = append(out, string(v.(lua.LString)))
+	})
+	return
+}
+
+func resultOfBools(t *lua.LTable) (out Bools) {
+	t.ForEach(func(_, v lua.LValue) {
+		out = append(out, bool(v.(lua.LBool)))
+	})
+	return
 }
 
 // --------------------------------------------------------------------
@@ -77,6 +121,30 @@ func (v Number) String() string {
 
 // --------------------------------------------------------------------
 
+// Numbers represents the number array value
+type Numbers []float64
+
+// Type returns the type of the value
+func (v Numbers) Type() Type {
+	return TypeNumbers
+}
+
+// String returns the string representation of the value
+func (v Numbers) String() string {
+	return fmt.Sprintf("%v", []float64(v))
+}
+
+// Table converts the slice to a lua table
+func (v Numbers) table() *lua.LTable {
+	tbl := new(lua.LTable)
+	for _, item := range v {
+		tbl.Append(lua.LNumber(item))
+	}
+	return tbl
+}
+
+// --------------------------------------------------------------------
+
 // String represents the string value
 type String string
 
@@ -92,6 +160,30 @@ func (v String) String() string {
 
 // --------------------------------------------------------------------
 
+// Strings represents the string array value
+type Strings []string
+
+// Type returns the type of the value
+func (v Strings) Type() Type {
+	return TypeStrings
+}
+
+// String returns the string representation of the value
+func (v Strings) String() string {
+	return fmt.Sprintf("%v", []string(v))
+}
+
+// Table converts the slice to a lua table
+func (v Strings) table() *lua.LTable {
+	tbl := new(lua.LTable)
+	for _, item := range v {
+		tbl.Append(lua.LString(item))
+	}
+	return tbl
+}
+
+// --------------------------------------------------------------------
+
 // Bool represents the boolean value
 type Bool bool
 
@@ -103,6 +195,30 @@ func (v Bool) Type() Type {
 // String returns the string representation of the value
 func (v Bool) String() string {
 	return lua.LBool(v).String()
+}
+
+// --------------------------------------------------------------------
+
+// Bools represents the boolean array value
+type Bools []bool
+
+// Type returns the type of the value
+func (v Bools) Type() Type {
+	return TypeBools
+}
+
+// String returns the string representation of the value
+func (v Bools) String() string {
+	return fmt.Sprintf("%v", []bool(v))
+}
+
+// Table converts the slice to a lua table
+func (v Bools) table() *lua.LTable {
+	tbl := new(lua.LTable)
+	for _, item := range v {
+		tbl.Append(lua.LBool(item))
+	}
+	return tbl
 }
 
 // --------------------------------------------------------------------
@@ -131,6 +247,12 @@ func luaValueOf(i interface{}) lua.LValue {
 		return lua.LString(v)
 	case Bool:
 		return lua.LBool(v)
+	case Numbers:
+		return v.table()
+	case Strings:
+		return v.table()
+	case Bools:
+		return v.table()
 	case int:
 		return lua.LNumber(v)
 	case int8:
@@ -151,10 +273,20 @@ func luaValueOf(i interface{}) lua.LValue {
 		return lua.LNumber(v)
 	case uint64:
 		return lua.LNumber(v)
+	case float32:
+		return lua.LNumber(v)
+	case float64:
+		return lua.LNumber(v)
 	case bool:
 		return lua.LBool(v)
 	case string:
 		return lua.LString(v)
+	case []float64:
+		return Numbers(v).table()
+	case []bool:
+		return Bools(v).table()
+	case []string:
+		return Strings(v).table()
 	case reflect.Value:
 		switch v.Type() {
 		case typeString:
@@ -163,6 +295,12 @@ func luaValueOf(i interface{}) lua.LValue {
 			return lua.LNumber(v.Float())
 		case typeBool:
 			return lua.LBool(v.Bool())
+		case typeNumbers:
+			return v.Interface().(Numbers).table()
+		case typeBools:
+			return v.Interface().(Bools).table()
+		case typeStrings:
+			return v.Interface().(Strings).table()
 		default:
 			return lua.LNil
 		}

@@ -6,6 +6,7 @@ package lua
 import (
 	"context"
 	"hash/fnv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,9 +17,10 @@ func testModule() Module {
 		Name:    "test",
 		Version: "1.0.0",
 	}
-	m.Register("hash", hash)
-	m.Register("echo", echo)
-	m.Register("sum", sum)
+	must(m.Register("hash", hash))
+	must(m.Register("echo", echo))
+	must(m.Register("sum", sum))
+	must(m.Register("join", join))
 	return m
 }
 
@@ -35,6 +37,20 @@ func hash(s String) (Number, error) {
 	h.Write([]byte(s))
 
 	return Number(h.Sum32()), nil
+}
+
+func join(v Strings) (String, error) {
+	return String(strings.Join([]string(v), ", ")), nil
+}
+
+func Test_Join(t *testing.T) {
+	s, err := newScript("fixtures/join.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background())
+	assert.NoError(t, err)
+	assert.Equal(t, TypeString, out.Type())
+	assert.Equal(t, "apples, oranges, watermelons", string(out.(String)))
 }
 
 func Test_Hash(t *testing.T) {
