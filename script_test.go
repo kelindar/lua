@@ -22,9 +22,11 @@ type Person struct {
 	Age  int
 }
 
-// Benchmark_Serial/fib-8         	 5870025	       203 ns/op	      16 B/op	       2 allocs/op
-// Benchmark_Serial/empty-8       	 8592448	       137 ns/op	       0 B/op	       0 allocs/op
-// Benchmark_Serial/update-8      	 1000000	      1069 ns/op	     224 B/op	      14 allocs/op
+// Benchmark_Serial/fib-8         	 5765884	       207 ns/op	      16 B/op	       2 allocs/op
+// Benchmark_Serial/empty-8       	 8471679	       142 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Serial/update-8      	 1000000	      1140 ns/op	     256 B/op	      14 allocs/op
+// Benchmark_Serial/sleep-sigle-8 	     100	  10355408 ns/op	       0 B/op	       0 allocs/op
+// Benchmark_Serial/sleep-multi-8 	     890	   1349583 ns/op	       0 B/op	       0 allocs/op
 func Benchmark_Serial(b *testing.B) {
 	b.Run("fib", func(b *testing.B) {
 		s, _ := newScript("fixtures/fib.lua")
@@ -54,6 +56,26 @@ func Benchmark_Serial(b *testing.B) {
 		}
 	})
 
+	b.Run("sleep-sigle", func(b *testing.B) {
+		s, _ := newScript("fixtures/sleep.lua")
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background())
+		}
+	})
+
+	b.Run("sleep-multi", func(b *testing.B) {
+		s, _ := newScript("fixtures/sleep.lua")
+		b.RunParallel(func(pb *testing.PB) {
+			b.ReportAllocs()
+			b.ResetTimer()
+			for pb.Next() {
+				s.Run(context.Background())
+			}
+		})
+	})
+
 }
 
 // Benchmark_Module/echo-8         	 3467438	       346 ns/op	      48 B/op	       3 allocs/op
@@ -78,7 +100,7 @@ func Benchmark_Module(b *testing.B) {
 	})
 }
 
-// Benchmark_Fib_Parallel-8   	 4951480	       242 ns/op	      16 B/op	       2 allocs/op
+// Benchmark_Fib_Parallel-8   	 3893732	       268 ns/op	      16 B/op	       2 allocs/op
 func Benchmark_Fib_Parallel(b *testing.B) {
 	s, _ := newScript("fixtures/fib.lua")
 	b.ReportAllocs()
