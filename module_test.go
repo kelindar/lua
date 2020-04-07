@@ -8,6 +8,7 @@ import (
 	"hash/fnv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -21,6 +22,7 @@ func testModule() Module {
 	must(m.Register("echo", echo))
 	must(m.Register("sum", sum))
 	must(m.Register("join", join))
+	must(m.Register("sleep", sleep))
 	return m
 }
 
@@ -41,6 +43,11 @@ func hash(s String) (Number, error) {
 
 func join(v Strings) (String, error) {
 	return String(strings.Join([]string(v), ", ")), nil
+}
+
+func sleep(v Number) error {
+	time.Sleep(time.Duration(v) * time.Millisecond)
+	return nil
 }
 
 func Test_Join(t *testing.T) {
