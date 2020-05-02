@@ -61,11 +61,9 @@ func (s *Script) Run(ctx context.Context, args ...interface{}) (Value, error) {
 	// Acquire and release the pool of VMs, given our read lock we can still
 	// enter here concurrently so the pool must also be thread-safe.
 	vm := s.pool.Acquire()
-	if vm == nil {
-		return nil, errInvalidScript
-	}
-
 	defer s.pool.Release(vm)
+
+	// Run the script
 	return vm.Run(ctx, args)
 }
 
@@ -223,12 +221,7 @@ func newPool(s *Script) (pool, error) {
 
 // Acquire gets a state from the pool.
 func (p pool) Acquire() (vm *vm) {
-	select {
-	case vm = <-p:
-	default:
-		vm = nil
-	}
-	return
+	return <-p // Wait until we have a VM
 }
 
 // Release returns a state to the pool.

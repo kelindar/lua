@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kelindar/lua)](https://goreportcard.com/report/github.com/kelindar/lua)
 [![GoDoc](https://godoc.org/github.com/kelindar/lua?status.svg)](https://godoc.org/github.com/kelindar/lua)
 
-This repository contains a concurrent LUA executor that is designed to keep running a same (but updateable) set of scripts over a long period of time. The design of the library is quite opinionated, as it requires the `main()` function to be present in the script in order to run it. It also maintains a single VM per `Script` instance, protected by a mutex.
+This repository contains a concurrent LUA executor that is designed to keep running a same (but updateable) set of scripts over a long period of time. The design of the library is quite opinionated, as it requires the `main()` function to be present in the script in order to run it. It also maintains a pool of VMs per `Script` instance to increase throughput per script.
 
 Under the hood, it uses [gopher-lua](https://github.com/yuin/gopher-lua) library but abstracts it away, in order to be easily replaced in future if required. 
 
