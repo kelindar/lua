@@ -172,11 +172,6 @@ func Test_InvalidScript(t *testing.T) {
 }
 
 func Test_NoMain(t *testing.T) {
-	{
-		s := new(Script)
-		_, err := s.Run(context.Background())
-		assert.Error(t, err)
-	}
 
 	{
 		s, err := FromString("", `main = 1`)

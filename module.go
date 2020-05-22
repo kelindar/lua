@@ -104,6 +104,14 @@ func (g *fngen) generate() lua.LGFunction {
 				args = append(args, reflect.ValueOf(resultOfNumbers(state.CheckTable(i+1))))
 			case TypeBools:
 				args = append(args, reflect.ValueOf(resultOfBools(state.CheckTable(i+1))))
+			case TypeTable:
+				if u, ok := state.Get(i + 1).(*lua.LUserData); ok {
+					if v, ok := u.Value.(map[string]interface{}); ok {
+						args = append(args, reflect.ValueOf(resultOfMap(v)))
+					}
+				} else {
+					args = append(args, reflect.ValueOf(resultOfTable(state.CheckTable(i+1))))
+				}
 			}
 		}
 

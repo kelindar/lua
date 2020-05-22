@@ -19,6 +19,7 @@ var (
 	typeNumbers = reflect.TypeOf(Numbers(nil))
 	typeStrings = reflect.TypeOf(Strings(nil))
 	typeBools   = reflect.TypeOf(Bools(nil))
+	typeTable   = reflect.TypeOf(Table(nil))
 )
 
 var typeMap = map[reflect.Type]Type{
@@ -28,6 +29,7 @@ var typeMap = map[reflect.Type]Type{
 	typeStrings: TypeStrings,
 	typeNumbers: TypeNumbers,
 	typeBools:   TypeBools,
+	typeTable:   TypeTable,
 }
 
 // Type represents a type of the value
@@ -42,6 +44,7 @@ const (
 	TypeBools
 	TypeNumbers
 	TypeStrings
+	TypeTable
 )
 
 // Value represents a returned
@@ -68,6 +71,8 @@ func resultOf(v lua.LValue) Value {
 		table := v.(*lua.LTable)
 		if top := table.RawGetInt(1); top != nil {
 			switch top.Type() {
+			case lua.LTNil:
+				return resultOfTable(table)
 			case lua.LTNumber:
 				return resultOfNumbers(table)
 			case lua.LTString:
@@ -102,6 +107,22 @@ func resultOfBools(t *lua.LTable) (out Bools) {
 		out = append(out, bool(v.(lua.LBool)))
 	})
 	return
+}
+
+func resultOfTable(t *lua.LTable) Table {
+	out := make(Table, t.Len())
+	t.ForEach(func(k, v lua.LValue) {
+		out[string(k.String())] = resultOf(v)
+	})
+	return out
+}
+
+func resultOfMap(input map[string]interface{}) Table {
+	t := make(Table, len(input))
+	for k, v := range input {
+		t[k] = ValueOf(v)
+	}
+	return t
 }
 
 // --------------------------------------------------------------------
@@ -223,6 +244,30 @@ func (v Bools) table() *lua.LTable {
 
 // --------------------------------------------------------------------
 
+// Table represents a map of string to value
+type Table map[string]Value
+
+// Type returns the type of the value
+func (v Table) Type() Type {
+	return TypeTable
+}
+
+// String returns the string representation of the value
+func (v Table) String() string {
+	return fmt.Sprintf("%v", map[string]Value(v))
+}
+
+// Table converts the slice to a lua table
+func (v Table) table() *lua.LTable {
+	tbl := new(lua.LTable)
+	for k, item := range v {
+		tbl.RawSetString(k, luaValueOf(item))
+	}
+	return tbl
+}
+
+// --------------------------------------------------------------------
+
 // Nil represents the nil value
 type Nil struct{}
 
@@ -252,6 +297,8 @@ func luaValueOf(i interface{}) lua.LValue {
 	case Strings:
 		return v.table()
 	case Bools:
+		return v.table()
+	case Table:
 		return v.table()
 	case int:
 		return lua.LNumber(v)
@@ -287,6 +334,8 @@ func luaValueOf(i interface{}) lua.LValue {
 		return Bools(v).table()
 	case []string:
 		return Strings(v).table()
+	case map[string]interface{}:
+		return resultOfMap(v).table()
 	case reflect.Value:
 		switch v.Type() {
 		case typeString:

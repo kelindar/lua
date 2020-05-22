@@ -48,6 +48,13 @@ func TestValueOf(t *testing.T) {
 		{input: []string{"a", "b"}, output: Strings{"a", "b"}},
 		{input: []float64{1, 2, 3}, output: Numbers{1, 2, 3}},
 		{input: []bool{false, true}, output: Bools{false, true}},
+		{input: map[string]interface{}{
+			"A": "foo",
+			"B": "bar",
+		}, output: Table{
+			"A": String("foo"),
+			"B": String("bar"),
+		}},
 	}
 
 	for _, tc := range tests {

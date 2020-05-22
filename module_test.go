@@ -23,6 +23,7 @@ func testModule() Module {
 	must(m.Register("sum", sum))
 	must(m.Register("join", join))
 	must(m.Register("sleep", sleep))
+	must(m.Register("joinMap", joinMap))
 	return m
 }
 
@@ -48,6 +49,14 @@ func join(v Strings) (String, error) {
 func sleep(v Number) error {
 	time.Sleep(time.Duration(v) * time.Millisecond)
 	return nil
+}
+
+func joinMap(table Table) (String, error) {
+	var sb strings.Builder
+	for k, v := range table {
+		sb.WriteString(k + ": " + v.String() + ", ")
+	}
+	return String(sb.String()), nil
 }
 
 func Test_Join(t *testing.T) {
@@ -78,6 +87,19 @@ func Test_Sum(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, TypeNumber, out.Type())
 	assert.Equal(t, int64(5), int64(out.(Number)))
+}
+
+func Test_JoinMap(t *testing.T) {
+	s, err := newScript("fixtures/joinMap.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), map[string]interface{}{
+		"A": "apples",
+		"B": "oranges",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, TypeString, out.Type())
+	assert.Equal(t, "A: apples, B: oranges, ", string(out.(String)))
 }
 
 func Test_NotAFunc(t *testing.T) {
