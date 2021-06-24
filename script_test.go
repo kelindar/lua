@@ -78,8 +78,11 @@ func Benchmark_Serial(b *testing.B) {
 
 }
 
-// Benchmark_Module/echo-8         	 3467438	       346 ns/op	      48 B/op	       3 allocs/op
-// Benchmark_Module/hash-8         	 3323775	       359 ns/op	      48 B/op	       5 allocs/op
+/*
+cpu: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz
+Benchmark_Module/echo-12         	 2925387	       405.3 ns/op	      48 B/op	       3 allocs/op
+Benchmark_Module/hash-12         	 3037982	       388.2 ns/op	      32 B/op	       3 allocs/op
+*/
 func Benchmark_Module(b *testing.B) {
 	b.Run("echo", func(b *testing.B) {
 		s, _ := newScript("fixtures/echo.lua")
