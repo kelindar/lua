@@ -10,13 +10,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"runtime"
 	"sync"
 
 	"github.com/kelindar/lua/json"
 	lua "github.com/yuin/gopher-lua"
 	"github.com/yuin/gopher-lua/parse"
-	"layeh.com/gopher-luar"
+	luar "layeh.com/gopher-luar"
 )
 
 var (
@@ -200,14 +201,18 @@ func newState() *lua.LState {
 
 // --------------------------------------------------------------------
 
+// Determine the concurrency for the VM pool
+var concurrency = int(math.Min(
+	float64(runtime.GOMAXPROCS(-1)), float64(runtime.NumCPU()),
+))
+
 // Pool holds a pool of runtimes.
 type pool chan *vm
 
 // newPool creates a new pool of runtimes.
 func newPool(s *Script) (pool, error) {
-	max := runtime.NumCPU()
-	pool := make(pool, max)
-	for i := 0; i < max; i++ {
+	pool := make(pool, concurrency)
+	for i := 0; i < concurrency; i++ {
 		vm, err := newVM(s)
 		if err != nil {
 			return nil, err

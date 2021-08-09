@@ -99,7 +99,8 @@ func Test_JoinMap(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, TypeString, out.Type())
-	assert.Equal(t, "A: apples, B: oranges, ", string(out.(String)))
+	assert.Contains(t, string(out.(String)), "A: apples")
+	assert.Contains(t, string(out.(String)), "B: oranges")
 }
 
 func Test_NotAFunc(t *testing.T) {
