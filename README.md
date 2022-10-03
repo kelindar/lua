@@ -11,7 +11,7 @@ Under the hood, it uses [gopher-lua](https://github.com/yuin/gopher-lua) library
 ## Usage Example
 Below is the usage example which runs the fibonacci LUA script with input `10`.
 
-```
+```go
 // Load the script
 s, err := FromString("test.lua", `
     function main(n)
@@ -27,7 +27,7 @@ println(result.String()) // Output: 89
 
 The library also supports passing complex data types, thanks to [gopher-luar](https://github.com/layeh/gopher-luar). In the example below we create a `Person` struct and update its name in LUA as a side-effect of the script. It also returns the updated name back as a string.
 
-```
+```go
 // Load the script
 s, err := FromString("test.lua", `
     function main(input)
@@ -47,7 +47,7 @@ println(input.Name)  // Outputs: "Updated"
 This library also supports and abstracts modules, which allows you to provide one or multiple native libraries which can be used by the script. These things are just ensembles of functions which are implemented in pure Go. 
 
 Such functions must comply to a specific interface - they should have their arguments as the library's values (e.g. `Number`, `String` or `Bool`) and the result can be either a value and `error` or just an `error`. Here's an example of such function:
-```
+```go
 func hash(s lua.String) (lua.Number, error) {
 	h := fnv.New32a()
 	h.Write([]byte(s))
@@ -57,7 +57,7 @@ func hash(s lua.String) (lua.Number, error) {
 ```
 
 In order to use it, the functions should be registered into a `NativeModule` which then is loaded when script is created.
-```
+```go
 // Create a test module which provides hash function
 module := &NativeModule{
     Name:    "test",
@@ -83,7 +83,7 @@ println(out) // Output: 4282878506
 
 Similarly to native modules, the library also supports LUA script modules. In order to use it, first you need to create a script which contains a module and returns a table with the functions. Then, create a `ScriptModule` which points to the script with `Name` which can be used in the `require` statement.
 
-```
+```go
 moduleCode, err := FromString("module.lua", `
     local demo_mod = {} -- The main table
 
@@ -104,7 +104,7 @@ module := &ScriptModule{
 
 Finally, attach the module to the script as with native modules.
 
-```
+```go
 // Load the script
 s, err := FromString("test.lua", `
     local demo = require("demo_mod")
