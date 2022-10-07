@@ -1,15 +1,16 @@
 package lua
 
 import (
-	"github.com/yuin/gopher-lua"
 	"reflect"
+
+	lua "github.com/yuin/gopher-lua"
 )
 
 //go:generate genny -in=$GOFILE -out=../z_unary.go gen "TIn=String,Number,Bool"
 
 func init() {
 	typ := reflect.TypeOf((*func(TIn) error)(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(TIn) error)
 		return func(state *lua.LState) int {
 			if err := f(TIn(state.CheckTIn(1))); err != nil {
@@ -22,7 +23,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func() (TIn, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func() (TIn, error))
 		return func(state *lua.LState) int {
 			v, err := f()

@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 )
 
 var (
@@ -140,7 +140,7 @@ func (j jsonValue) MarshalJSON() (data []byte, err error) {
 
 // Decode converts the JSON encoded data to Lua values.
 func Decode(L *lua.LState, data []byte) (lua.LValue, error) {
-	var value interface{}
+	var value any
 	err := json.Unmarshal(data, &value)
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func Decode(L *lua.LState, data []byte) (lua.LValue, error) {
 //
 // This function only converts values that the encoding/json package decodes to.
 // All other values will return lua.LNil.
-func DecodeValue(L *lua.LState, value interface{}) lua.LValue {
+func DecodeValue(L *lua.LState, value any) lua.LValue {
 	switch converted := value.(type) {
 	case bool:
 		return lua.LBool(converted)
@@ -162,13 +162,13 @@ func DecodeValue(L *lua.LState, value interface{}) lua.LValue {
 		return lua.LString(converted)
 	case json.Number:
 		return lua.LString(converted)
-	case []interface{}:
+	case []any:
 		arr := L.CreateTable(len(converted), 0)
 		for _, item := range converted {
 			arr.Append(DecodeValue(L, item))
 		}
 		return arr
-	case map[string]interface{}:
+	case map[string]any:
 		tbl := L.CreateTable(0, len(converted))
 		for key, item := range converted {
 			tbl.RawSetH(lua.LString(key), DecodeValue(L, item))

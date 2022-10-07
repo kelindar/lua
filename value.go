@@ -119,6 +119,14 @@ func resultOfBools(t *lua.LTable) (out Bools) {
 	return
 }
 
+func resultOfTable(t *lua.LTable) Table {
+	out := make(Table, t.Len())
+	t.ForEach(func(k, v lua.LValue) {
+		out[k.String()] = resultOf(v)
+	})
+	return out
+}
+
 func resultOfTables(t *lua.LTable) (out Tables) {
 	t.ForEach(func(_, v lua.LValue) {
 		out = append(out, resultOfTable(v.(*lua.LTable)))
@@ -126,18 +134,18 @@ func resultOfTables(t *lua.LTable) (out Tables) {
 	return
 }
 
-func resultOfTable(t *lua.LTable) Table {
-	out := make(Table, t.Len())
-	t.ForEach(func(k, v lua.LValue) {
-		out[string(k.String())] = resultOf(v)
-	})
-	return out
-}
-
 func resultOfMap(input map[string]any) Table {
 	t := make(Table, len(input))
 	for k, v := range input {
 		t[k] = ValueOf(v)
+	}
+	return t
+}
+
+func resultOfMaps(input []map[string]any) Tables {
+	t := make(Tables, 0, len(input))
+	for _, v := range input {
+		t = append(t, resultOfMap(v))
 	}
 	return t
 }
@@ -494,6 +502,10 @@ func luaValueOf(i any) lua.LValue {
 			return v.Interface().(Bools).table()
 		case typeStrings:
 			return v.Interface().(Strings).table()
+		case typeTable:
+			return v.Interface().(Table).table()
+		case typeTables:
+			return v.Interface().(Tables).table()
 		default:
 			return lua.LNil
 		}

@@ -229,7 +229,7 @@ func Test_Error(t *testing.T) {
 }
 
 func Test_JSON(t *testing.T) {
-	input := map[string]interface{}{
+	input := map[string]any{
 		"a": 123,
 		"b": "hello",
 		"c": 10.15,

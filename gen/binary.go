@@ -1,9 +1,10 @@
 package lua
 
 import (
-	"github.com/cheekybits/genny/generic"
-	"github.com/yuin/gopher-lua"
 	"reflect"
+
+	"github.com/cheekybits/genny/generic"
+	lua "github.com/yuin/gopher-lua"
 )
 
 //go:generate genny -in=$GOFILE -out=../z_binary.go gen "TIn=String,Number,Bool TOut=String,Number,Bool"
@@ -16,7 +17,7 @@ type TOut generic.Type
 
 func init() {
 	typ := reflect.TypeOf((*func(TIn) (TOut, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(TIn) (TOut, error))
 		return func(state *lua.LState) int {
 			v, err := f(TIn(state.CheckTIn(1)))

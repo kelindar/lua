@@ -12,7 +12,7 @@ import (
 
 func init() {
 	typ := reflect.TypeOf((*func(String) (String, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(String) (String, error))
 		return func(state *lua.LState) int {
 			v, err := f(String(state.CheckString(1)))
@@ -29,7 +29,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(String) (Number, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(String) (Number, error))
 		return func(state *lua.LState) int {
 			v, err := f(String(state.CheckString(1)))
@@ -46,7 +46,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(String) (Bool, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(String) (Bool, error))
 		return func(state *lua.LState) int {
 			v, err := f(String(state.CheckString(1)))
@@ -63,7 +63,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(Number) (String, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(Number) (String, error))
 		return func(state *lua.LState) int {
 			v, err := f(Number(state.CheckNumber(1)))
@@ -80,7 +80,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(Number) (Number, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(Number) (Number, error))
 		return func(state *lua.LState) int {
 			v, err := f(Number(state.CheckNumber(1)))
@@ -97,7 +97,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(Number) (Bool, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(Number) (Bool, error))
 		return func(state *lua.LState) int {
 			v, err := f(Number(state.CheckNumber(1)))
@@ -114,7 +114,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(Bool) (String, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(Bool) (String, error))
 		return func(state *lua.LState) int {
 			v, err := f(Bool(state.CheckBool(1)))
@@ -131,7 +131,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(Bool) (Number, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(Bool) (Number, error))
 		return func(state *lua.LState) int {
 			v, err := f(Bool(state.CheckBool(1)))
@@ -148,7 +148,7 @@ func init() {
 
 func init() {
 	typ := reflect.TypeOf((*func(Bool) (Bool, error))(nil)).Elem()
-	builtin[typ] = func(v interface{}) lua.LGFunction {
+	builtin[typ] = func(v any) lua.LGFunction {
 		f := v.(func(Bool) (Bool, error))
 		return func(state *lua.LState) int {
 			v, err := f(Bool(state.CheckBool(1)))
