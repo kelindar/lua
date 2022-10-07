@@ -18,12 +18,15 @@ func testModule() Module {
 		Name:    "test",
 		Version: "1.0.0",
 	}
+
 	must(m.Register("hash", hash))
 	must(m.Register("echo", echo))
 	must(m.Register("sum", sum))
 	must(m.Register("join", join))
 	must(m.Register("sleep", sleep))
 	must(m.Register("joinMap", joinMap))
+	must(m.Register("enrich", enrich))
+	must(m.Register("batch", batch))
 	return m
 }
 
@@ -57,6 +60,16 @@ func joinMap(table Table) (String, error) {
 		sb.WriteString(k + ": " + v.String() + ", ")
 	}
 	return String(sb.String()), nil
+}
+
+func enrich(name String, request Table) (Table, error) {
+	request["name"] = name
+	request["age"] = Number(30)
+	return request, nil
+}
+
+func batch(batch Tables) (Tables, error) {
+	return batch, nil
 }
 
 func Test_Join(t *testing.T) {
@@ -93,7 +106,7 @@ func Test_JoinMap(t *testing.T) {
 	s, err := newScript("fixtures/joinMap.lua")
 	assert.NoError(t, err)
 
-	out, err := s.Run(context.Background(), map[string]interface{}{
+	out, err := s.Run(context.Background(), map[string]any{
 		"A": "apples",
 		"B": "oranges",
 	})
@@ -135,4 +148,37 @@ func Test_ScriptModule(t *testing.T) {
 
 	err = s.Close()
 	assert.NoError(t, err)
+}
+
+func TestEnrich(t *testing.T) {
+	s, err := newScript("fixtures/enrich.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), map[string]any{
+		"A": "apples",
+		"B": "oranges",
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, TypeTable, out.Type())
+	assert.EqualValues(t, map[string]any{
+		"A":    "apples",
+		"B":    "oranges",
+		"age":  30.0,
+		"name": "roman",
+	}, out.(Table).Native())
+}
+
+func TestBatch(t *testing.T) {
+	s, err := newScript("fixtures/batch.lua")
+	assert.NoError(t, err)
+
+	input := []map[string]any{
+		{"A": "apples"}, {"B": "oranges"},
+	}
+
+	out, err := s.Run(context.Background(), input)
+
+	assert.NoError(t, err)
+	assert.Equal(t, TypeTables, out.Type())
+	assert.EqualValues(t, input, out.(Tables).Native())
 }

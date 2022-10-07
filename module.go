@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 	errFuncOutput = errors.New("lua: function return values must be either (error) or (lua.Value, error)")
 )
 
-var builtin = make(map[reflect.Type]func(interface{}) lua.LGFunction, 8)
+var builtin = make(map[reflect.Type]func(any) lua.LGFunction, 8)
 
 // Module represents a loadable module.
 type Module interface {
@@ -64,7 +64,7 @@ type NativeModule struct {
 
 type fngen struct {
 	name string
-	code interface{}
+	code any
 }
 
 // Generate generates a function
@@ -104,13 +104,17 @@ func (g *fngen) generate() lua.LGFunction {
 				args = append(args, reflect.ValueOf(resultOfNumbers(state.CheckTable(i+1))))
 			case TypeBools:
 				args = append(args, reflect.ValueOf(resultOfBools(state.CheckTable(i+1))))
+			case TypeTables:
+				if u, ok := state.Get(i + 1).(*lua.LUserData); ok {
+					if v, ok := u.Value.([]map[string]any); ok {
+						args = append(args, reflect.ValueOf(resultOfMaps(v)))
+					}
+				}
 			case TypeTable:
 				if u, ok := state.Get(i + 1).(*lua.LUserData); ok {
-					if v, ok := u.Value.(map[string]interface{}); ok {
+					if v, ok := u.Value.(map[string]any); ok {
 						args = append(args, reflect.ValueOf(resultOfMap(v)))
 					}
-				} else {
-					args = append(args, reflect.ValueOf(resultOfTable(state.CheckTable(i+1))))
 				}
 			}
 		}
@@ -136,7 +140,7 @@ func (g *fngen) generate() lua.LGFunction {
 }
 
 // Register registers a function into the module.
-func (m *NativeModule) Register(name string, function interface{}) error {
+func (m *NativeModule) Register(name string, function any) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 
@@ -146,7 +150,7 @@ func (m *NativeModule) Register(name string, function interface{}) error {
 	}
 
 	// Validate the function
-	if err := validate(name, function); err != nil {
+	if err := validate(function); err != nil {
 		return err
 	}
 
@@ -178,7 +182,7 @@ func (m *NativeModule) inject(state *lua.LState) error {
 }
 
 // validate validates the function type
-func validate(name string, function interface{}) error {
+func validate(function any) error {
 	rv := reflect.ValueOf(function)
 	rt := rv.Type()
 	if rt.Kind() != reflect.Func {
@@ -194,12 +198,30 @@ func validate(name string, function interface{}) error {
 
 	// Validate the output
 	switch {
-	case rt.NumOut() == 1 && rt.Out(0).Implements(typeError):
-	case rt.NumOut() == 2 && rt.Out(0) == typeString && rt.Out(1).Implements(typeError):
-	case rt.NumOut() == 2 && rt.Out(0) == typeNumber && rt.Out(1).Implements(typeError):
-	case rt.NumOut() == 2 && rt.Out(0) == typeBool && rt.Out(1).Implements(typeError):
+	case rt.NumOut() == 1 && isError(rt, 0):
+	case rt.NumOut() == 2 && isValid(rt, 0) && isError(rt, 1):
 	default:
 		return errFuncOutput
 	}
 	return nil
+}
+
+func isError(rt reflect.Type, at int) bool {
+	return rt.Out(at).Implements(typeError)
+}
+
+func isValid(rt reflect.Type, at int) bool {
+	switch rt.Out(at) {
+	case typeString:
+	case typeNumber:
+	case typeBool:
+	case typeNumbers:
+	case typeStrings:
+	case typeBools:
+	case typeTable:
+	case typeTables:
+	default:
+		return false
+	}
+	return true
 }

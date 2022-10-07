@@ -53,7 +53,7 @@ func (s *Script) Name() string {
 }
 
 // Run runs the main function of the script with arguments.
-func (s *Script) Run(ctx context.Context, args ...interface{}) (Value, error) {
+func (s *Script) Run(ctx context.Context, args ...any) (Value, error) {
 
 	// Protect swapping of the pools when the script is updated.
 	s.lock.RLock()
@@ -164,7 +164,7 @@ func newVM(s *Script) (*vm, error) {
 }
 
 // Run runs the main function of the script with arguments.
-func (v *vm) Run(ctx context.Context, args []interface{}) (Value, error) {
+func (v *vm) Run(ctx context.Context, args []any) (Value, error) {
 	if v.main == nil {
 		return nil, errInvalidScript
 	}
