@@ -7,12 +7,15 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 )
+
+type numberType interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr | ~float32 | ~float64
+}
 
 var (
 	typeError   = reflect.TypeOf((*error)(nil)).Elem()
-	typeValue   = reflect.TypeOf((*Value)(nil)).Elem()
 	typeNumber  = reflect.TypeOf(Number(0))
 	typeString  = reflect.TypeOf(String(""))
 	typeBool    = reflect.TypeOf(Bool(true))
@@ -51,6 +54,7 @@ const (
 type Value interface {
 	fmt.Stringer
 	Type() Type
+	Native() interface{}
 }
 
 // ValueOf converts a value to a LUA-friendly one.
@@ -140,10 +144,24 @@ func (v Number) String() string {
 	return lua.LNumber(v).String()
 }
 
+// Native returns value casted to native type
+func (v Number) Native() interface{} {
+	return float64(v)
+}
+
 // --------------------------------------------------------------------
 
 // Numbers represents the number array value
 type Numbers []float64
+
+// numbersOf returns an array as a numbers array
+func numbersOf[T numberType](arr []T) Numbers {
+	out := make([]float64, 0, len(arr))
+	for _, v := range arr {
+		out = append(out, float64(v))
+	}
+	return out
+}
 
 // Type returns the type of the value
 func (v Numbers) Type() Type {
@@ -153,6 +171,11 @@ func (v Numbers) Type() Type {
 // String returns the string representation of the value
 func (v Numbers) String() string {
 	return fmt.Sprintf("%v", []float64(v))
+}
+
+// Native returns value casted to native type
+func (v Numbers) Native() interface{} {
+	return []float64(v)
 }
 
 // Table converts the slice to a lua table
@@ -179,6 +202,11 @@ func (v String) String() string {
 	return lua.LString(v).String()
 }
 
+// Native returns value casted to native type
+func (v String) Native() interface{} {
+	return string(v)
+}
+
 // --------------------------------------------------------------------
 
 // Strings represents the string array value
@@ -192,6 +220,11 @@ func (v Strings) Type() Type {
 // String returns the string representation of the value
 func (v Strings) String() string {
 	return fmt.Sprintf("%v", []string(v))
+}
+
+// Native returns value casted to native type
+func (v Strings) Native() interface{} {
+	return []string(v)
 }
 
 // Table converts the slice to a lua table
@@ -218,6 +251,11 @@ func (v Bool) String() string {
 	return lua.LBool(v).String()
 }
 
+// Native returns value casted to native type
+func (v Bool) Native() interface{} {
+	return bool(v)
+}
+
 // --------------------------------------------------------------------
 
 // Bools represents the boolean array value
@@ -231,6 +269,11 @@ func (v Bools) Type() Type {
 // String returns the string representation of the value
 func (v Bools) String() string {
 	return fmt.Sprintf("%v", []bool(v))
+}
+
+// Native returns value casted to native type
+func (v Bools) Native() interface{} {
+	return []bool(v)
 }
 
 // Table converts the slice to a lua table
@@ -257,6 +300,15 @@ func (v Table) String() string {
 	return fmt.Sprintf("%v", map[string]Value(v))
 }
 
+// Native returns value casted to native type
+func (v Table) Native() interface{} {
+	out := make(map[string]interface{})
+	for key, elem := range v {
+		out[key] = elem.Native()
+	}
+	return out
+}
+
 // Table converts the slice to a lua table
 func (v Table) table() *lua.LTable {
 	tbl := new(lua.LTable)
@@ -279,6 +331,11 @@ func (v Nil) Type() Type {
 // String returns the string representation of the value
 func (v Nil) String() string {
 	return "(nil)"
+}
+
+// Native returns value casted to native type
+func (v Nil) Native() interface{} {
+	return nil
 }
 
 // --------------------------------------------------------------------
@@ -328,6 +385,28 @@ func luaValueOf(i interface{}) lua.LValue {
 		return lua.LBool(v)
 	case string:
 		return lua.LString(v)
+	case []int:
+		return numbersOf(v).table()
+	case []int8:
+		return numbersOf(v).table()
+	case []int16:
+		return numbersOf(v).table()
+	case []int32:
+		return numbersOf(v).table()
+	case []int64:
+		return numbersOf(v).table()
+	case []uint:
+		return numbersOf(v).table()
+	case []uint8:
+		return numbersOf(v).table()
+	case []uint16:
+		return numbersOf(v).table()
+	case []uint32:
+		return numbersOf(v).table()
+	case []uint64:
+		return numbersOf(v).table()
+	case []float32:
+		return numbersOf(v).table()
 	case []float64:
 		return Numbers(v).table()
 	case []bool:

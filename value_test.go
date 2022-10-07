@@ -46,6 +46,17 @@ func TestValueOf(t *testing.T) {
 		{input: true, output: Bool(true)},
 		{input: "hi", output: String("hi")},
 		{input: []string{"a", "b"}, output: Strings{"a", "b"}},
+		{input: []int{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []int8{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []int16{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []int32{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []int64{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []uint{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []uint8{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []uint16{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []uint32{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []uint64{1, 2, 3}, output: Numbers{1, 2, 3}},
+		{input: []float32{1, 2, 3}, output: Numbers{1, 2, 3}},
 		{input: []float64{1, 2, 3}, output: Numbers{1, 2, 3}},
 		{input: []bool{false, true}, output: Bools{false, true}},
 		{input: map[string]interface{}{
@@ -61,6 +72,23 @@ func TestValueOf(t *testing.T) {
 		assert.Equal(t, tc.output, ValueOf(tc.input))
 		assert.NotEmpty(t, tc.output.String())
 	}
+}
+
+func TestNativeTable(t *testing.T) {
+	expect := map[string]interface{}{
+		"user":   "Roman",
+		"age":    37.0,
+		"dev":    true,
+		"bitmap": []bool{true, false, true},
+		"floats": []float64{1, 2, 3, 4, 5},
+		"skills": map[string]interface{}{
+			"golang": 52.7,
+			"eating": 100.0,
+		},
+	}
+
+	input := ValueOf(expect)
+	assert.EqualValues(t, expect, input.Native())
 }
 
 func must(err error) {
