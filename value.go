@@ -4,6 +4,7 @@
 package lua
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 
@@ -23,6 +24,7 @@ var (
 	typeStrings = reflect.TypeOf(Strings(nil))
 	typeBools   = reflect.TypeOf(Bools(nil))
 	typeTable   = reflect.TypeOf(Table(nil))
+	typeTables  = reflect.TypeOf(Tables(nil))
 )
 
 var typeMap = map[reflect.Type]Type{
@@ -33,6 +35,7 @@ var typeMap = map[reflect.Type]Type{
 	typeNumbers: TypeNumbers,
 	typeBools:   TypeBools,
 	typeTable:   TypeTable,
+	typeTables:  TypeTables,
 }
 
 // Type represents a type of the value
@@ -48,17 +51,18 @@ const (
 	TypeNumbers
 	TypeStrings
 	TypeTable
+	TypeTables
 )
 
 // Value represents a returned
 type Value interface {
 	fmt.Stringer
 	Type() Type
-	Native() interface{}
+	Native() any
 }
 
 // ValueOf converts a value to a LUA-friendly one.
-func ValueOf(i interface{}) Value {
+func ValueOf(i any) Value {
 	return resultOf(luaValueOf(i))
 }
 
@@ -83,6 +87,8 @@ func resultOf(v lua.LValue) Value {
 				return resultOfStrings(table)
 			case lua.LTBool:
 				return resultOfBools(table)
+			case lua.LTTable:
+				return resultOfTables(table)
 			}
 		}
 
@@ -113,6 +119,13 @@ func resultOfBools(t *lua.LTable) (out Bools) {
 	return
 }
 
+func resultOfTables(t *lua.LTable) (out Tables) {
+	t.ForEach(func(_, v lua.LValue) {
+		out = append(out, resultOfTable(v.(*lua.LTable)))
+	})
+	return
+}
+
 func resultOfTable(t *lua.LTable) Table {
 	out := make(Table, t.Len())
 	t.ForEach(func(k, v lua.LValue) {
@@ -121,12 +134,32 @@ func resultOfTable(t *lua.LTable) Table {
 	return out
 }
 
-func resultOfMap(input map[string]interface{}) Table {
+func resultOfMap(input map[string]any) Table {
 	t := make(Table, len(input))
 	for k, v := range input {
 		t[k] = ValueOf(v)
 	}
 	return t
+}
+
+// --------------------------------------------------------------------
+
+// Nil represents the nil value
+type Nil struct{}
+
+// Type returns the type of the value
+func (v Nil) Type() Type {
+	return TypeNil
+}
+
+// String returns the string representation of the value
+func (v Nil) String() string {
+	return "(nil)"
+}
+
+// Native returns value casted to native type
+func (v Nil) Native() any {
+	return nil
 }
 
 // --------------------------------------------------------------------
@@ -145,7 +178,7 @@ func (v Number) String() string {
 }
 
 // Native returns value casted to native type
-func (v Number) Native() interface{} {
+func (v Number) Native() any {
 	return float64(v)
 }
 
@@ -174,7 +207,7 @@ func (v Numbers) String() string {
 }
 
 // Native returns value casted to native type
-func (v Numbers) Native() interface{} {
+func (v Numbers) Native() any {
 	return []float64(v)
 }
 
@@ -203,7 +236,7 @@ func (v String) String() string {
 }
 
 // Native returns value casted to native type
-func (v String) Native() interface{} {
+func (v String) Native() any {
 	return string(v)
 }
 
@@ -223,7 +256,7 @@ func (v Strings) String() string {
 }
 
 // Native returns value casted to native type
-func (v Strings) Native() interface{} {
+func (v Strings) Native() any {
 	return []string(v)
 }
 
@@ -252,7 +285,7 @@ func (v Bool) String() string {
 }
 
 // Native returns value casted to native type
-func (v Bool) Native() interface{} {
+func (v Bool) Native() any {
 	return bool(v)
 }
 
@@ -272,7 +305,7 @@ func (v Bools) String() string {
 }
 
 // Native returns value casted to native type
-func (v Bools) Native() interface{} {
+func (v Bools) Native() any {
 	return []bool(v)
 }
 
@@ -301,8 +334,8 @@ func (v Table) String() string {
 }
 
 // Native returns value casted to native type
-func (v Table) Native() interface{} {
-	out := make(map[string]interface{})
+func (v Table) Native() any {
+	out := make(map[string]any)
 	for key, elem := range v {
 		out[key] = elem.Native()
 	}
@@ -318,30 +351,56 @@ func (v Table) table() *lua.LTable {
 	return tbl
 }
 
-// --------------------------------------------------------------------
+// UnmarshalJSON unmarshals the type from JSON
+func (v *Table) UnmarshalJSON(b []byte) error {
+	var data map[string]any
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
+	}
 
-// Nil represents the nil value
-type Nil struct{}
-
-// Type returns the type of the value
-func (v Nil) Type() Type {
-	return TypeNil
-}
-
-// String returns the string representation of the value
-func (v Nil) String() string {
-	return "(nil)"
-}
-
-// Native returns value casted to native type
-func (v Nil) Native() interface{} {
+	*v = resultOfMap(data)
 	return nil
 }
 
 // --------------------------------------------------------------------
 
+// Tables represents the array of tables
+type Tables []Table
+
+// Type returns the type of the value
+func (v Tables) Type() Type {
+	return TypeTables
+}
+
+// String returns the string representation of the value
+func (v Tables) String() string {
+	return fmt.Sprintf("%v", "(array of tables)")
+}
+
+// Native returns value casted to native type
+func (v Tables) Native() any {
+	var out []map[string]any
+	for _, elem := range v {
+		if tbl, ok := elem.Native().(map[string]any); ok {
+			out = append(out, tbl)
+		}
+	}
+	return out
+}
+
+// Table converts the slice to a lua table
+func (v Tables) table() *lua.LTable {
+	tbl := new(lua.LTable)
+	for _, item := range v {
+		tbl.Append(luaValueOf(item))
+	}
+	return tbl
+}
+
+// --------------------------------------------------------------------
+
 // luaValueOf converts a value to a LUA-friendly one.
-func luaValueOf(i interface{}) lua.LValue {
+func luaValueOf(i any) lua.LValue {
 	switch v := i.(type) {
 	case Number:
 		return lua.LNumber(v)
@@ -356,6 +415,8 @@ func luaValueOf(i interface{}) lua.LValue {
 	case Bools:
 		return v.table()
 	case Table:
+		return v.table()
+	case Tables:
 		return v.table()
 	case int:
 		return lua.LNumber(v)
@@ -385,6 +446,8 @@ func luaValueOf(i interface{}) lua.LValue {
 		return lua.LBool(v)
 	case string:
 		return lua.LString(v)
+	case map[string]any:
+		return resultOfMap(v).table()
 	case []int:
 		return numbersOf(v).table()
 	case []int8:
@@ -413,8 +476,10 @@ func luaValueOf(i interface{}) lua.LValue {
 		return Bools(v).table()
 	case []string:
 		return Strings(v).table()
-	case map[string]interface{}:
-		return resultOfMap(v).table()
+	case []any:
+		return luaArrayOf(v)
+	case []map[string]any:
+		return luaTablesOf(v)
 	case reflect.Value:
 		switch v.Type() {
 		case typeString:
@@ -432,7 +497,26 @@ func luaValueOf(i interface{}) lua.LValue {
 		default:
 			return lua.LNil
 		}
+
 	default:
 		return lua.LNil
 	}
+}
+
+// luaArrayOf creates a lua slice from an arbitrary array
+func luaArrayOf(input []any) *lua.LTable {
+	tbl := new(lua.LTable)
+	for _, item := range input {
+		tbl.Append(luaValueOf(item))
+	}
+	return tbl
+}
+
+// luaTablesOf creates a lua slice from a set of maps
+func luaTablesOf(input []map[string]any) *lua.LTable {
+	tbl := new(lua.LTable)
+	for _, v := range input {
+		tbl.Append(luaValueOf(v))
+	}
+	return tbl
 }
