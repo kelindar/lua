@@ -17,7 +17,6 @@ import (
 	"github.com/kelindar/lua/json"
 	lua "github.com/yuin/gopher-lua"
 	"github.com/yuin/gopher-lua/parse"
-	luar "layeh.com/gopher-luar"
 )
 
 var (
@@ -174,7 +173,7 @@ func (v *vm) Run(ctx context.Context, args []any) (Value, error) {
 	exec.SetContext(ctx)
 	exec.Push(v.main)
 	for _, arg := range args {
-		exec.Push(luar.New(exec, arg))
+		exec.Push(lvalueOf(exec, arg))
 	}
 
 	// Call the main function

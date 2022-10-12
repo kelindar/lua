@@ -103,7 +103,7 @@ func (g *fngen) generate() lua.LGFunction {
 				return 0
 			}
 
-			state.Push(luaValueOf(out[0].Interface()))
+			state.Push(lvalueOf(state, out[0].Interface()))
 			return 1
 		}
 	}
