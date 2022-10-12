@@ -22,11 +22,13 @@ type Person struct {
 	Age  int
 }
 
-// Benchmark_Serial/fib-8         	 5765884	       207 ns/op	      16 B/op	       2 allocs/op
-// Benchmark_Serial/empty-8       	 8471679	       142 ns/op	       0 B/op	       0 allocs/op
-// Benchmark_Serial/update-8      	 1000000	      1140 ns/op	     256 B/op	      14 allocs/op
-// Benchmark_Serial/sleep-sigle-8 	     100	  10355408 ns/op	       0 B/op	       0 allocs/op
-// Benchmark_Serial/sleep-multi-8 	     890	   1349583 ns/op	       0 B/op	       0 allocs/op
+/*
+Benchmark_Serial/fib-10         	 7672525	       141.6 ns/op	      16 B/op	       2 allocs/op
+Benchmark_Serial/empty-10       	11113112	       108.0 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Serial/update-10      	 1627885	       739.0 ns/op	     240 B/op	      14 allocs/op
+Benchmark_Serial/sleep-sigle-10 	     100	  10899862 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Serial/sleep-multi-10 	    1104	   1096791 ns/op	       0 B/op	       0 allocs/op
+*/
 func Benchmark_Serial(b *testing.B) {
 	b.Run("fib", func(b *testing.B) {
 		s, _ := newScript("fixtures/fib.lua")

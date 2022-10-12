@@ -5,6 +5,7 @@ package lua
 
 import (
 	"context"
+	"fmt"
 	"hash/fnv"
 	"strings"
 	"testing"
@@ -27,6 +28,7 @@ func testModule() Module {
 	must(m.Register("joinMap", joinMap))
 	must(m.Register("enrich", enrich))
 	must(m.Register("batch", batch))
+	must(m.Register("error", errorfunc))
 	return m
 }
 
@@ -36,6 +38,10 @@ func sum(a, b Number) (Number, error) {
 
 func echo(v String) (String, error) {
 	return v, nil
+}
+
+func errorfunc(v String) (String, error) {
+	return "", fmt.Errorf("error with input (%v)", v)
 }
 
 func hash(s String) (Number, error) {
@@ -181,4 +187,49 @@ func TestBatch(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, TypeTables, out.Type())
 	assert.EqualValues(t, input, out.(Tables).Native())
+}
+
+func TestErrorMessage(t *testing.T) {
+	s, err := newScript("fixtures/error.lua")
+	assert.NoError(t, err)
+
+	_, err = s.Run(context.Background(), nil)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "error with input (roman)")
+}
+
+func TestEnrichComplexTable(t *testing.T) {
+	s, err := newScript("fixtures/enrich.lua")
+	assert.NoError(t, err)
+
+	v, err := s.Run(context.Background(), map[string][]float64{
+		"A": {1, 2, 3},
+		"B": {1, 2, 3},
+	})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+	assert.Equal(t, Table{
+		"A":    Numbers{1, 2, 3},
+		"B":    Numbers{1, 2, 3},
+		"age":  Number(30),
+		"name": String("roman"),
+	}, v)
+}
+
+func TestEnrichComplexBatch(t *testing.T) {
+	s, err := newScript("fixtures/batch.lua")
+	assert.NoError(t, err)
+
+	v, err := s.Run(context.Background(), []map[string][]float64{{
+		"A": {1, 2, 3},
+		"B": {1, 2, 3},
+	}})
+
+	assert.NoError(t, err)
+	assert.NotNil(t, v)
+	assert.Equal(t, Tables{{
+		"A": Numbers{1, 2, 3},
+		"B": Numbers{1, 2, 3},
+	}}, v)
 }
