@@ -76,47 +76,17 @@ func (g *fngen) generate() lua.LGFunction {
 	}
 
 	name := g.name
-	argTypes := make([]Type, 0, rt.NumIn())
-	for i := 0; i < rt.NumIn(); i++ {
-		argTypes = append(argTypes, typeMap[rt.In(i)])
-	}
-
 	args := make([]reflect.Value, 0, rt.NumIn())
 	return func(state *lua.LState) int {
-		if state.GetTop() != len(argTypes) {
-			state.RaiseError("%s expects %d arguments, but got %d", name, len(argTypes), state.GetTop())
+		if state.GetTop() != rt.NumIn() {
+			state.RaiseError("%s expects %d arguments, but got %d", name, rt.NumIn(), state.GetTop())
 			return 0
 		}
 
 		// Convert the arguments
 		args = args[:0]
-		for i, arg := range argTypes {
-			switch arg {
-			case TypeString:
-				args = append(args, reflect.ValueOf(String(state.CheckString(i+1))))
-			case TypeNumber:
-				args = append(args, reflect.ValueOf(Number(state.CheckNumber(i+1))))
-			case TypeBool:
-				args = append(args, reflect.ValueOf(Bool(state.CheckBool(i+1))))
-			case TypeStrings:
-				args = append(args, reflect.ValueOf(resultOfStrings(state.CheckTable(i+1))))
-			case TypeNumbers:
-				args = append(args, reflect.ValueOf(resultOfNumbers(state.CheckTable(i+1))))
-			case TypeBools:
-				args = append(args, reflect.ValueOf(resultOfBools(state.CheckTable(i+1))))
-			case TypeTables:
-				if u, ok := state.Get(i + 1).(*lua.LUserData); ok {
-					if v, ok := u.Value.([]map[string]any); ok {
-						args = append(args, reflect.ValueOf(resultOfMaps(v)))
-					}
-				}
-			case TypeTable:
-				if u, ok := state.Get(i + 1).(*lua.LUserData); ok {
-					if v, ok := u.Value.(map[string]any); ok {
-						args = append(args, reflect.ValueOf(resultOfMap(v)))
-					}
-				}
-			}
+		for i := 0; i < rt.NumIn(); i++ {
+			args = append(args, reflect.ValueOf(resultOf(state.Get(i+1))))
 		}
 
 		// Call the function
@@ -133,7 +103,7 @@ func (g *fngen) generate() lua.LGFunction {
 				return 0
 			}
 
-			state.Push(luaValueOf(out[0]))
+			state.Push(luaValueOf(out[0].Interface()))
 			return 1
 		}
 	}
