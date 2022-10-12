@@ -6,9 +6,62 @@ package lua
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	lua "github.com/yuin/gopher-lua"
 )
+
+type numberType interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr | ~float32 | ~float64
+}
+
+var (
+	typeError   = reflect.TypeOf((*error)(nil)).Elem()
+	typeNumber  = reflect.TypeOf(Number(0))
+	typeString  = reflect.TypeOf(String(""))
+	typeBool    = reflect.TypeOf(Bool(true))
+	typeNumbers = reflect.TypeOf(Numbers(nil))
+	typeStrings = reflect.TypeOf(Strings(nil))
+	typeBools   = reflect.TypeOf(Bools(nil))
+	typeTable   = reflect.TypeOf(Table(nil))
+	typeTables  = reflect.TypeOf(Tables(nil))
+)
+
+var typeMap = map[reflect.Type]Type{
+	typeString:  TypeString,
+	typeNumber:  TypeNumber,
+	typeBool:    TypeBool,
+	typeStrings: TypeStrings,
+	typeNumbers: TypeNumbers,
+	typeBools:   TypeBools,
+	typeTable:   TypeTable,
+	typeTables:  TypeTables,
+}
+
+// Type represents a type of the value
+type Type byte
+
+// Various supported types
+const (
+	TypeNil = Type(iota)
+	TypeBool
+	TypeNumber
+	TypeString
+	TypeBools
+	TypeNumbers
+	TypeStrings
+	TypeTable
+	TypeTables
+	TypeArray
+)
+
+// Value represents a returned
+type Value interface {
+	fmt.Stringer
+	Type() Type
+	Native() any
+	lvalue(*lua.LState) lua.LValue
+}
 
 // --------------------------------------------------------------------
 
@@ -30,6 +83,11 @@ func (v Nil) Native() any {
 	return nil
 }
 
+// lvalue converts the value to a LUA value
+func (v Nil) lvalue(*lua.LState) lua.LValue {
+	return lua.LNil
+}
+
 // --------------------------------------------------------------------
 
 // Number represents the numerical value
@@ -48,6 +106,11 @@ func (v Number) String() string {
 // Native returns value casted to native type
 func (v Number) Native() any {
 	return float64(v)
+}
+
+// lvalue converts the value to a LUA value
+func (v Number) lvalue(*lua.LState) lua.LValue {
+	return lua.LNumber(v)
 }
 
 // --------------------------------------------------------------------
@@ -79,8 +142,8 @@ func (v Numbers) Native() any {
 	return []float64(v)
 }
 
-// Table converts the slice to a lua table
-func (v Numbers) table() *lua.LTable {
+// lvalue converts the value to a LUA value
+func (v Numbers) lvalue(*lua.LState) lua.LValue {
 	tbl := new(lua.LTable)
 	for _, item := range v {
 		tbl.Append(lua.LNumber(item))
@@ -106,6 +169,11 @@ func (v String) String() string {
 // Native returns value casted to native type
 func (v String) Native() any {
 	return string(v)
+}
+
+// lvalue converts the value to a LUA value
+func (v String) lvalue(*lua.LState) lua.LValue {
+	return lua.LString(v)
 }
 
 // --------------------------------------------------------------------
@@ -137,6 +205,15 @@ func (v Strings) table() *lua.LTable {
 	return tbl
 }
 
+// lvalue converts the value to a LUA value
+func (v Strings) lvalue(*lua.LState) lua.LValue {
+	tbl := new(lua.LTable)
+	for _, item := range v {
+		tbl.Append(lua.LString(item))
+	}
+	return tbl
+}
+
 // --------------------------------------------------------------------
 
 // Bool represents the boolean value
@@ -155,6 +232,11 @@ func (v Bool) String() string {
 // Native returns value casted to native type
 func (v Bool) Native() any {
 	return bool(v)
+}
+
+// lvalue converts the value to a LUA value
+func (v Bool) lvalue(*lua.LState) lua.LValue {
+	return lua.LBool(v)
 }
 
 // --------------------------------------------------------------------
@@ -177,8 +259,8 @@ func (v Bools) Native() any {
 	return []bool(v)
 }
 
-// Table converts the slice to a lua table
-func (v Bools) table() *lua.LTable {
+// lvalue converts the value to a LUA value
+func (v Bools) lvalue(*lua.LState) lua.LValue {
 	tbl := new(lua.LTable)
 	for _, item := range v {
 		tbl.Append(lua.LBool(item))
@@ -210,11 +292,11 @@ func (v Table) Native() any {
 	return out
 }
 
-// Table converts the slice to a lua table
-func (v Table) table() *lua.LTable {
+// lvalue converts the value to a LUA value
+func (v Table) lvalue(state *lua.LState) lua.LValue {
 	tbl := new(lua.LTable)
 	for k, item := range v {
-		tbl.RawSetString(k, luaValueOf(item))
+		tbl.RawSetString(k, lvalueOf(state, item))
 	}
 	return tbl
 }
@@ -226,7 +308,7 @@ func (v *Table) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	*v = resultOfMap(data)
+	*v = mapAsTable(data)
 	return nil
 }
 
@@ -256,11 +338,46 @@ func (v Tables) Native() any {
 	return out
 }
 
-// Table converts the slice to a lua table
-func (v Tables) table() *lua.LTable {
+// lvalue converts the value to a LUA value
+func (v Tables) lvalue(state *lua.LState) lua.LValue {
 	tbl := new(lua.LTable)
 	for _, item := range v {
-		tbl.Append(luaValueOf(item))
+		tbl.Append(lvalueOf(state, item))
+	}
+	return tbl
+}
+
+// --------------------------------------------------------------------
+
+// Array represents the array of values
+type Array []Value
+
+// Type returns the type of the value
+func (v Array) Type() Type {
+	return TypeArray
+}
+
+// String returns the string representation of the value
+func (v Array) String() string {
+	return fmt.Sprintf("%+v", []Value(v))
+}
+
+// Native returns value casted to native type
+func (v Array) Native() any {
+	var out []map[string]any
+	for _, elem := range v {
+		if tbl, ok := elem.Native().(map[string]any); ok {
+			out = append(out, tbl)
+		}
+	}
+	return out
+}
+
+// lvalue converts the value to a LUA value
+func (v Array) lvalue(state *lua.LState) lua.LValue {
+	tbl := new(lua.LTable)
+	for _, item := range v {
+		tbl.Append(lvalueOf(state, item))
 	}
 	return tbl
 }

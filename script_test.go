@@ -19,7 +19,6 @@ func newScript(file string, mods ...Module) (*Script, error) {
 
 type Person struct {
 	Name string
-	Age  int
 }
 
 /*
@@ -236,7 +235,7 @@ func Test_JSON(t *testing.T) {
 		"b": "hello",
 		"c": 10.15,
 		"d": true,
-		"e": &Person{Name: "Roman", Age: 15},
+		"e": &Person{Name: "Roman"},
 	}
 
 	s, err := newScript("fixtures/json.lua")
@@ -245,6 +244,6 @@ func Test_JSON(t *testing.T) {
 	out, err := s.Run(context.Background(), input)
 	assert.NoError(t, err)
 	assert.Equal(t, TypeString, out.Type())
-	assert.Equal(t, `{"a":123,"b":"hello","c":10.15,"d":true,"e":{"Name":"Roman","Age":15}}`,
+	assert.Equal(t, `{"a":123,"b":"hello","c":10.15,"d":true,"e":{"Name":"Roman"}}`,
 		out.String())
 }
