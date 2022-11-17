@@ -270,6 +270,27 @@ func TestArray(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	res := out.Native().([]any)
+	res, ok := out.Native().([]any)
+	assert.True(t, ok)
+	assert.Len(t, res, 2)
+}
+
+func TestMap(t *testing.T) {
+	s, err := FromString("sandbox", `
+	function main(request)
+		return request
+    end
+	`)
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), []map[string]any{
+		{"a": []any{1.0, 2.0}},
+		{"b": []any{10.0, 20.0}},
+	})
+
+	assert.NoError(t, err)
+
+	res, ok := out.Native().([]map[string]any)
+	assert.True(t, ok)
 	assert.Len(t, res, 2)
 }
