@@ -4,6 +4,7 @@
 package lua
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -59,4 +60,14 @@ func TestValueOf(t *testing.T) {
 		assert.Equal(t, tc.output, ValueOf(tc.input))
 		assert.NotEmpty(t, tc.output.String())
 	}
+}
+
+func TestArray(t *testing.T) {
+	a := make([][]any, 1)
+	a = [][]any{
+		{1, 2, 3},
+		{4, 5, 6},
+	}
+	v := ValueOf(a)
+	assert.Equal(t, reflect.TypeOf(v.Native()).Elem().Kind().String(), reflect.Slice.String())
 }
