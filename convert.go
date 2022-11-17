@@ -91,7 +91,7 @@ func ValueOf(v any) Value {
 	case []map[string]any:
 		return mapsAsTables(v)
 	case []any:
-		return asArray(v)
+		return sliceAsArray(v)
 	case nil:
 		return Nil{}
 	default:
@@ -130,7 +130,10 @@ func resultOf(v lua.LValue) Value {
 			case lua.LTBool:
 				return asBools(v)
 			case lua.LTTable:
-				return asTables(v)
+				if top.(*lua.LTable).RawGetInt(1) == lua.LNil {
+					return asTables(v)
+				}
+				return asArrays(v)
 			}
 		}
 		return Nil{}
@@ -177,7 +180,15 @@ func asTables(t *lua.LTable) (out Tables) {
 	return
 }
 
-func asArray(input []any) Array {
+func asArrays(t *lua.LTable) Array {
+	out := make(Array, t.Len())
+	t.ForEach(func(_, v lua.LValue) {
+		out = append(out, resultOf(v))
+	})
+	return out
+}
+
+func sliceAsArray(input []any) Array {
 	arr := make(Array, 0, len(input))
 	for _, v := range input {
 		arr = append(arr, ValueOf(v))

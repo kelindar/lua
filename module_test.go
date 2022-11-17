@@ -254,3 +254,20 @@ func TestUserdata(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, String("table"), out)
 }
+
+func TestArray(t *testing.T) {
+	s, err := FromString("sandbox", `
+	function main(request)
+		return request
+    end
+	`)
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), [][]any{
+		{1.0, 2.0},
+		{10.0, 20.0},
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, String("table"), out)
+}

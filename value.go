@@ -364,11 +364,9 @@ func (v Array) String() string {
 
 // Native returns value casted to native type
 func (v Array) Native() any {
-	var out []map[string]any
+	var out []any
 	for _, elem := range v {
-		if tbl, ok := elem.Native().(map[string]any); ok {
-			out = append(out, tbl)
-		}
+		out = append(out, elem.Native())
 	}
 	return out
 }
