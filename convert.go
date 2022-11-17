@@ -181,7 +181,7 @@ func asTables(t *lua.LTable) (out Tables) {
 }
 
 func asArrays(t *lua.LTable) Array {
-	out := make(Array, t.Len())
+	var out Array
 	t.ForEach(func(_, v lua.LValue) {
 		out = append(out, resultOf(v))
 	})
@@ -189,7 +189,7 @@ func asArrays(t *lua.LTable) Array {
 }
 
 func sliceAsArray(input []any) Array {
-	arr := make(Array, 0, len(input))
+	var arr Array
 	for _, v := range input {
 		arr = append(arr, ValueOf(v))
 	}

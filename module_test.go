@@ -269,5 +269,7 @@ func TestArray(t *testing.T) {
 	})
 
 	assert.NoError(t, err)
-	assert.Equal(t, String("table"), out)
+
+	res := out.Native().([]any)
+	assert.Len(t, res, 2)
 }
