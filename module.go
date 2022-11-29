@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	errFuncInput  = errors.New("lua: function input arguments must be of type lua.Value")
-	errFuncOutput = errors.New("lua: function return values must be either (error) or (lua.Value, error)")
+	errFuncInput   = errors.New("lua: function input arguments must be of type lua.Value")
+	errFuncOutput  = errors.New("lua: function return values must be either (error) or (lua.Value, error)")
+	errorInterface = reflect.TypeOf((*error)(nil)).Elem()
 )
 
 var builtin = make(map[reflect.Type]func(any) lua.LGFunction, 8)
@@ -94,12 +95,12 @@ func (g *fngen) generate() lua.LGFunction {
 		switch len(out) {
 		case 1:
 			if err := out[0]; !err.IsNil() {
-				state.RaiseError(err.String())
+				state.RaiseError(err.Interface().(error).Error())
 			}
 			return 0
 		default:
 			if err := out[1]; !err.IsNil() {
-				state.RaiseError(err.String())
+				state.RaiseError(err.Interface().(error).Error())
 				return 0
 			}
 

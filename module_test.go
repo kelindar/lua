@@ -5,6 +5,7 @@ package lua
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"strings"
@@ -29,6 +30,7 @@ func testModule() Module {
 	must(m.Register("enrich", enrich))
 	must(m.Register("batch", batch))
 	must(m.Register("error", errorfunc))
+	must(m.Register("error1", errorfunc1))
 	return m
 }
 
@@ -42,6 +44,10 @@ func echo(v String) (String, error) {
 
 func errorfunc(v String) (String, error) {
 	return "", fmt.Errorf("error with input (%v)", v)
+}
+
+func errorfunc1(_ Table) (String, error) {
+	return "", errors.New("throwing error")
 }
 
 func hash(s String) (Number, error) {
@@ -200,6 +206,17 @@ func TestErrorMessage(t *testing.T) {
 	_, err = s.Run(context.Background(), nil)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error with input (roman)")
+}
+
+func TestErrorMessage1(t *testing.T) {
+	s, err := newScript("fixtures/error1.lua")
+	assert.NoError(t, err)
+
+	_, err = s.Run(context.Background(), map[string]string{
+		"test1": "default",
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "throwing error")
 }
 
 func TestEnrichComplexTable(t *testing.T) {
