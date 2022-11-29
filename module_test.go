@@ -5,6 +5,7 @@ package lua
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"strings"
@@ -46,7 +47,7 @@ func errorfunc(v String) (String, error) {
 }
 
 func errorfunc1(_ Table) (String, error) {
-	return "", fmt.Errorf("throwing error")
+	return "", errors.New("throwing error")
 }
 
 func hash(s String) (Number, error) {
