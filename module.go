@@ -94,12 +94,12 @@ func (g *fngen) generate() lua.LGFunction {
 		out := rv.Call(args)
 		switch len(out) {
 		case 1:
-			if err := out[0]; !err.IsNil() && err.Type().Implements(errorInterface) {
+			if err := out[0]; !err.IsNil() {
 				state.RaiseError(err.Interface().(error).Error())
 			}
 			return 0
 		default:
-			if err := out[1]; !err.IsNil() && err.Type().Implements(errorInterface) {
+			if err := out[1]; !err.IsNil() {
 				state.RaiseError(err.Interface().(error).Error())
 				return 0
 			}
