@@ -4,10 +4,10 @@
 package lua
 
 import (
-	lua "github.com/yuin/gopher-lua"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	lua "github.com/yuin/gopher-lua"
 )
 
 func TestValueOf(t *testing.T) {

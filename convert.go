@@ -131,7 +131,7 @@ func resultOf(v lua.LValue) Value {
 				return asArrays(v)
 			}
 		}
-		// try map
+		// map case
 		tbl := asTable(v)
 		if len(tbl) > 0 {
 			return tbl

@@ -5,10 +5,10 @@ package lua
 
 import (
 	"encoding/json"
-	lua "github.com/yuin/gopher-lua"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	lua "github.com/yuin/gopher-lua"
 )
 
 func newTestValue(typ Type) Value {

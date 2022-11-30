@@ -321,7 +321,6 @@ func (v Array) Type() Type {
 	return TypeArray
 }
 
-// [TODO] check this
 // String returns the string representation of the value
 func (v Array) String() string {
 	return fmt.Sprintf("%+v", []Value(v))
