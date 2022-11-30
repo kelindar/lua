@@ -28,7 +28,7 @@ func ValueOf(v any) Value {
 		return v
 	case Table:
 		return v
-	case Tables:
+	case Array:
 		return v
 	case int:
 		return Number(v)
@@ -88,10 +88,8 @@ func ValueOf(v any) Value {
 		return Strings(v)
 	case map[string]any:
 		return mapAsTable(v)
-	case []map[string]any:
-		return mapsAsTables(v)
 	case []any:
-		return asArray(v)
+		return sliceAsArray(v)
 	case nil:
 		return Nil{}
 	default:
@@ -109,7 +107,7 @@ func ValueOf(v any) Value {
 	}
 }
 
-// ValueOf converts a value to a LUA-friendly one.
+// resultOf converts a value to a LUA-friendly one.
 func resultOf(v lua.LValue) Value {
 	switch v := v.(type) {
 	case lua.LNumber:
@@ -119,10 +117,10 @@ func resultOf(v lua.LValue) Value {
 	case lua.LBool:
 		return Bool(v)
 	case *lua.LTable:
+
+		// slice cases
 		if top := v.RawGetInt(1); top != nil {
 			switch top.Type() {
-			case lua.LTNil:
-				return asTable(v)
 			case lua.LTNumber:
 				return asNumbers(v)
 			case lua.LTString:
@@ -130,8 +128,13 @@ func resultOf(v lua.LValue) Value {
 			case lua.LTBool:
 				return asBools(v)
 			case lua.LTTable:
-				return asTables(v)
+				return asArrays(v)
 			}
+		}
+		// map case
+		tbl := asTable(v)
+		if len(tbl) > 0 {
+			return tbl
 		}
 		return Nil{}
 	case *lua.LUserData:
@@ -163,21 +166,25 @@ func asBools(t *lua.LTable) (out Bools) {
 }
 
 func asTable(t *lua.LTable) Table {
-	out := make(Table, t.Len())
+	out := make(Table)
 	t.ForEach(func(k, v lua.LValue) {
-		out[k.String()] = resultOf(v)
+		if k.Type() == lua.LTString {
+			out[k.String()] = resultOf(v)
+		}
 	})
 	return out
 }
 
-func asTables(t *lua.LTable) (out Tables) {
-	t.ForEach(func(_, v lua.LValue) {
-		out = append(out, asTable(v.(*lua.LTable)))
+func asArrays(t *lua.LTable) Array {
+	out, index := make(Array, t.Len()), 0
+	t.ForEach(func(_ lua.LValue, v lua.LValue) {
+		out[index] = resultOf(v)
+		index += 1
 	})
-	return
+	return out
 }
 
-func asArray(input []any) Array {
+func sliceAsArray(input []any) Array {
 	arr := make(Array, 0, len(input))
 	for _, v := range input {
 		arr = append(arr, ValueOf(v))
@@ -189,14 +196,6 @@ func mapAsTable(input map[string]any) Table {
 	t := make(Table, len(input))
 	for k, v := range input {
 		t[k] = ValueOf(v)
-	}
-	return t
-}
-
-func mapsAsTables(input []map[string]any) Tables {
-	t := make(Tables, 0, len(input))
-	for _, v := range input {
-		t = append(t, mapAsTable(v))
 	}
 	return t
 }
