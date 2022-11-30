@@ -4,6 +4,7 @@
 package lua
 
 import (
+	lua "github.com/yuin/gopher-lua"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,5 +59,59 @@ func TestValueOf(t *testing.T) {
 	for _, tc := range tests {
 		assert.Equal(t, tc.output, ValueOf(tc.input))
 		assert.NotEmpty(t, tc.output.String())
+	}
+}
+
+func TestResultOfArray(t *testing.T) {
+	mp := []map[string]any{
+		{"hello": []float64{1, 2, 3}},
+		{"next": true},
+		{"hello": "world"},
+	}
+	l := lua.NewState()
+	val := lvalueOf(l, mp)
+	res := resultOf(val)
+	array, ok := res.(Array)
+	assert.True(t, ok)
+	assert.Len(t, array, 3)
+
+	resMp := array.Native().([]any)
+	for i, val := range resMp {
+		assert.Equal(t, mp[i], val.(map[string]any))
+	}
+}
+
+func TestResultComplexMap(t *testing.T) {
+	mp := []map[string]any{
+		{"map": []map[string]any{
+			{"e": "f", "g": "h"}},
+		},
+	}
+	l := lua.NewState()
+	val := lvalueOf(l, mp)
+	res := resultOf(val)
+	array, ok := res.(Array)
+	assert.True(t, ok)
+	resMp := array.Native().([]any)
+	assert.Len(t, resMp, len(mp))
+}
+
+func TestResultOfMap(t *testing.T) {
+	mp := map[string]any{
+		"string":  "aj",
+		"numbers": []float64{1, 2, 3},
+		"bool":    true,
+	}
+	l := lua.NewState()
+	val := lvalueOf(l, mp)
+	res := resultOf(val)
+	table, ok := res.(Table)
+	assert.True(t, ok)
+	assert.Len(t, table, 3)
+	resMp, ok := table.Native().(map[string]any)
+	assert.True(t, ok)
+
+	for _, key := range []string{"string", "numbers", "bool"} {
+		assert.Equal(t, mp[key], resMp[key])
 	}
 }

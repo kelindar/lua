@@ -102,7 +102,6 @@ func (g *fngen) generate() lua.LGFunction {
 				state.RaiseError(err.String())
 				return 0
 			}
-
 			state.Push(lvalueOf(state, out[0].Interface()))
 			return 1
 		}
@@ -189,7 +188,7 @@ func isValid(rt reflect.Type, at int) bool {
 	case typeStrings:
 	case typeBools:
 	case typeTable:
-	case typeTables:
+	case typeArray:
 	default:
 		return false
 	}

@@ -24,7 +24,7 @@ var (
 	typeStrings = reflect.TypeOf(Strings(nil))
 	typeBools   = reflect.TypeOf(Bools(nil))
 	typeTable   = reflect.TypeOf(Table(nil))
-	typeTables  = reflect.TypeOf(Tables(nil))
+	typeArray   = reflect.TypeOf(Array(nil))
 )
 
 var typeMap = map[reflect.Type]Type{
@@ -35,7 +35,7 @@ var typeMap = map[reflect.Type]Type{
 	typeNumbers: TypeNumbers,
 	typeBools:   TypeBools,
 	typeTable:   TypeTable,
-	typeTables:  TypeTables,
+	typeArray:   TypeArray,
 }
 
 // Type represents a type of the value
@@ -51,7 +51,6 @@ const (
 	TypeNumbers
 	TypeStrings
 	TypeTable
-	TypeTables
 	TypeArray
 )
 
@@ -314,41 +313,6 @@ func (v *Table) UnmarshalJSON(b []byte) error {
 
 // --------------------------------------------------------------------
 
-// Tables represents the array of tables
-type Tables []Table
-
-// Type returns the type of the value
-func (v Tables) Type() Type {
-	return TypeTables
-}
-
-// String returns the string representation of the value
-func (v Tables) String() string {
-	return fmt.Sprintf("%v", "(array of tables)")
-}
-
-// Native returns value casted to native type
-func (v Tables) Native() any {
-	var out []map[string]any
-	for _, elem := range v {
-		if tbl, ok := elem.Native().(map[string]any); ok {
-			out = append(out, tbl)
-		}
-	}
-	return out
-}
-
-// lvalue converts the value to a LUA value
-func (v Tables) lvalue(state *lua.LState) lua.LValue {
-	tbl := new(lua.LTable)
-	for _, item := range v {
-		tbl.Append(lvalueOf(state, item))
-	}
-	return tbl
-}
-
-// --------------------------------------------------------------------
-
 // Array represents the array of values
 type Array []Value
 
@@ -357,6 +321,7 @@ func (v Array) Type() Type {
 	return TypeArray
 }
 
+// [TODO] check this
 // String returns the string representation of the value
 func (v Array) String() string {
 	return fmt.Sprintf("%+v", []Value(v))
@@ -364,11 +329,9 @@ func (v Array) String() string {
 
 // Native returns value casted to native type
 func (v Array) Native() any {
-	var out []map[string]any
-	for _, elem := range v {
-		if tbl, ok := elem.Native().(map[string]any); ok {
-			out = append(out, tbl)
-		}
+	out := make([]any, len(v))
+	for i, elem := range v {
+		out[i] = elem.Native()
 	}
 	return out
 }

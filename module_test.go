@@ -27,7 +27,6 @@ func testModule() Module {
 	must(m.Register("sleep", sleep))
 	must(m.Register("joinMap", joinMap))
 	must(m.Register("enrich", enrich))
-	must(m.Register("batch", batch))
 	must(m.Register("error", errorfunc))
 	return m
 }
@@ -72,10 +71,6 @@ func enrich(name String, request Table) (Table, error) {
 	request["name"] = name
 	request["age"] = Number(30)
 	return request, nil
-}
-
-func batch(batch Tables) (Tables, error) {
-	return batch, nil
 }
 
 func Test_Join(t *testing.T) {
@@ -174,25 +169,6 @@ func TestEnrich(t *testing.T) {
 	}, out.(Table).Native())
 }
 
-func TestBatch(t *testing.T) {
-	s, err := newScript("fixtures/batch.lua")
-	assert.NoError(t, err)
-
-	input := []map[string]any{
-		{"A": "apples"}, {"B": "oranges"},
-	}
-
-	out, err := s.Run(context.Background(), input)
-
-	assert.NoError(t, err)
-	assert.Equal(t, TypeTables, out.Type())
-	assert.EqualValues(t, input, out.(Tables).Native())
-	assert.Equal(t, Tables{
-		{"A": String("apples")},
-		{"B": String("oranges")},
-	}, out)
-}
-
 func TestErrorMessage(t *testing.T) {
 	s, err := newScript("fixtures/error.lua")
 	assert.NoError(t, err)
@@ -219,23 +195,6 @@ func TestEnrichComplexTable(t *testing.T) {
 		"age":  Number(30),
 		"name": String("roman"),
 	}, v)
-}
-
-func TestEnrichComplexBatch(t *testing.T) {
-	s, err := newScript("fixtures/batch.lua")
-	assert.NoError(t, err)
-
-	v, err := s.Run(context.Background(), []map[string][]float64{{
-		"A": {1, 2, 3},
-		"B": {1, 2, 3},
-	}})
-
-	assert.NoError(t, err)
-	assert.NotNil(t, v)
-	assert.Equal(t, Tables{{
-		"A": Numbers{1, 2, 3},
-		"B": Numbers{1, 2, 3},
-	}}, v)
 }
 
 func TestUserdata(t *testing.T) {
