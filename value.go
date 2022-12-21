@@ -27,17 +27,6 @@ var (
 	typeArray   = reflect.TypeOf(Array(nil))
 )
 
-var typeMap = map[reflect.Type]Type{
-	typeString:  TypeString,
-	typeNumber:  TypeNumber,
-	typeBool:    TypeBool,
-	typeStrings: TypeStrings,
-	typeNumbers: TypeNumbers,
-	typeBools:   TypeBools,
-	typeTable:   TypeTable,
-	typeArray:   TypeArray,
-}
-
 // Type represents a type of the value
 type Type byte
 
