@@ -30,7 +30,17 @@ func testModule() Module {
 	must(m.Register("enrich", enrich))
 	must(m.Register("error", errorfunc))
 	must(m.Register("error1", errorfunc1))
+	must(m.Register("any", any1))
 	return m
+}
+
+func any1(v Any) (Numbers, error) {
+	switch t := v.(type) {
+	case Numbers:
+		return t, nil
+	default:
+		return nil, fmt.Errorf("unsupported type %T", v)
+	}
 }
 
 func sum(a, b Number) (Number, error) {
@@ -97,6 +107,16 @@ func Test_Hash(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, TypeNumber, out.Type())
 	assert.Equal(t, int64(4282878506), int64(out.(Number)))
+}
+
+func Test_Any(t *testing.T) {
+	s, err := newScript("fixtures/any.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), []float64{1.1, 2.1})
+	assert.NoError(t, err)
+	assert.Equal(t, TypeNumbers, out.Type())
+	assert.Equal(t, []float64{1.1, 2.1}, out.Native())
 }
 
 func Test_Sum(t *testing.T) {
