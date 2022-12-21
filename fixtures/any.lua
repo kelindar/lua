@@ -1,5 +1,6 @@
 local api = require("test")
 
 function main(input)
-    return api.any(input)
+    -- input is type of Any
+    return api.toNumbers(input)
 end

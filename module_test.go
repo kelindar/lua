@@ -30,11 +30,11 @@ func testModule() Module {
 	must(m.Register("enrich", enrich))
 	must(m.Register("error", errorfunc))
 	must(m.Register("error1", errorfunc1))
-	must(m.Register("any", any1))
+	must(m.Register("toNumbers", toNumbers))
 	return m
 }
 
-func any1(v Any) (Numbers, error) {
+func toNumbers(v Any) (Numbers, error) {
 	switch t := v.(type) {
 	case Numbers:
 		return t, nil
