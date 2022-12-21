@@ -34,7 +34,7 @@ func testModule() Module {
 	return m
 }
 
-func toNumbers(v Any) (Numbers, error) {
+func toNumbers(v Value) (Numbers, error) {
 	switch t := v.(type) {
 	case Numbers:
 		return t, nil
@@ -109,8 +109,8 @@ func Test_Hash(t *testing.T) {
 	assert.Equal(t, int64(4282878506), int64(out.(Number)))
 }
 
-func Test_Any(t *testing.T) {
-	s, err := newScript("fixtures/any.lua")
+func Test_Value(t *testing.T) {
+	s, err := newScript("fixtures/value.lua")
 	assert.NoError(t, err)
 
 	out, err := s.Run(context.Background(), []float64{1.1, 2.1})

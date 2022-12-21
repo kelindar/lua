@@ -25,7 +25,7 @@ var (
 	typeBools   = reflect.TypeOf(Bools(nil))
 	typeTable   = reflect.TypeOf(Table(nil))
 	typeArray   = reflect.TypeOf(Array(nil))
-	typeAny     = reflect.TypeOf((*Any)(nil)).Elem()
+	typeValue   = reflect.TypeOf((*Value)(nil)).Elem()
 )
 
 var typeMap = map[reflect.Type]Type{
@@ -37,7 +37,7 @@ var typeMap = map[reflect.Type]Type{
 	typeBools:   TypeBools,
 	typeTable:   TypeTable,
 	typeArray:   TypeArray,
-	typeAny:     TypeAny,
+	typeValue:   TypeValue,
 }
 
 // Type represents a type of the value
@@ -54,7 +54,7 @@ const (
 	TypeStrings
 	TypeTable
 	TypeArray
-	TypeAny
+	TypeValue
 )
 
 // Value represents a returned
@@ -346,8 +346,3 @@ func (v Array) lvalue(state *lua.LState) lua.LValue {
 	}
 	return tbl
 }
-
-// --------------------------------------------------------------------
-
-// Any represents any type (interface{})
-type Any any
