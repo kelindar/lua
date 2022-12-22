@@ -25,7 +25,20 @@ var (
 	typeBools   = reflect.TypeOf(Bools(nil))
 	typeTable   = reflect.TypeOf(Table(nil))
 	typeArray   = reflect.TypeOf(Array(nil))
+	typeValue   = reflect.TypeOf((*Value)(nil)).Elem()
 )
+
+var typeMap = map[reflect.Type]Type{
+	typeString:  TypeString,
+	typeNumber:  TypeNumber,
+	typeBool:    TypeBool,
+	typeStrings: TypeStrings,
+	typeNumbers: TypeNumbers,
+	typeBools:   TypeBools,
+	typeTable:   TypeTable,
+	typeArray:   TypeArray,
+	typeValue:   TypeValue,
+}
 
 // Type represents a type of the value
 type Type byte
@@ -41,6 +54,7 @@ const (
 	TypeStrings
 	TypeTable
 	TypeArray
+	TypeValue
 )
 
 // Value represents a returned

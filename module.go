@@ -162,7 +162,7 @@ func validate(function any) error {
 	// Validate the input
 	for i := 0; i < rt.NumIn(); i++ {
 		v := rt.In(i)
-		if !v.Implements(reflect.TypeOf((*Value)(nil)).Elem()) {
+		if _, ok := typeMap[v]; !ok {
 			return errFuncInput
 		}
 	}

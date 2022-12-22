@@ -50,9 +50,9 @@ func errorfunc1(_ Table) (String, error) {
 	return "", errors.New("throwing error")
 }
 
-func hash(s String) (Number, error) {
+func hash(s Value) (Number, error) {
 	h := fnv.New32a()
-	h.Write([]byte(s))
+	h.Write([]byte(s.(String)))
 
 	return Number(h.Sum32()), nil
 }
