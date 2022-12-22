@@ -30,6 +30,7 @@ func testModule() Module {
 	must(m.Register("enrich", enrich))
 	must(m.Register("error", errorfunc))
 	must(m.Register("error1", errorfunc1))
+	must(m.Register("toNumbers", toNumbers))
 	return m
 }
 
@@ -49,9 +50,9 @@ func errorfunc1(_ Table) (String, error) {
 	return "", errors.New("throwing error")
 }
 
-func hash(s String) (Number, error) {
+func hash(s Value) (Number, error) {
 	h := fnv.New32a()
-	h.Write([]byte(s))
+	h.Write([]byte(s.(String)))
 
 	return Number(h.Sum32()), nil
 }
@@ -77,6 +78,15 @@ func enrich(name String, request Table) (Table, error) {
 	request["name"] = name
 	request["age"] = Number(30)
 	return request, nil
+}
+
+func toNumbers(v Value) (Numbers, error) {
+	switch t := v.(type) {
+	case Numbers:
+		return t, nil
+	default:
+		return nil, fmt.Errorf("unsupported type %T", v)
+	}
 }
 
 func Test_Join(t *testing.T) {
@@ -229,4 +239,14 @@ func TestUserdata(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, String("table"), out)
+}
+
+func Test_Any(t *testing.T) {
+	s, err := newScript("fixtures/any.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), []float64{1.1, 2.1})
+	assert.NoError(t, err)
+	assert.Equal(t, TypeNumbers, out.Type())
+	assert.Equal(t, []float64{1.1, 2.1}, out.Native())
 }
