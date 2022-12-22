@@ -161,8 +161,7 @@ func validate(function any) error {
 
 	// Validate the input
 	for i := 0; i < rt.NumIn(); i++ {
-		v := rt.In(i)
-		if _, ok := typeMap[v]; !ok {
+		if _, ok := typeMap[rt.In(i)]; !ok {
 			return errFuncInput
 		}
 	}
