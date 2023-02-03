@@ -90,7 +90,7 @@ func ValueOf(v any) Value {
 		return mapAsTable(v)
 	case []any:
 		return sliceAsArray(v)
-	case nil:
+	case nil, Nil:
 		return Nil{}
 	default:
 		out, err := json.Marshal(v)

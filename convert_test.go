@@ -47,6 +47,8 @@ func TestValueOf(t *testing.T) {
 		{input: []float32{1, 2, 3}, output: Numbers{1, 2, 3}},
 		{input: []float64{1, 2, 3}, output: Numbers{1, 2, 3}},
 		{input: []bool{false, true}, output: Bools{false, true}},
+		{input: nil, output: Nil{}},
+		{input: Nil{}, output: Nil{}},
 		{input: map[string]any{
 			"A": "foo",
 			"B": "bar",
