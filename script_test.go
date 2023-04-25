@@ -247,3 +247,10 @@ func Test_JSON(t *testing.T) {
 	assert.Equal(t, `{"a":123,"b":"hello","c":10.15,"d":true,"e":{"Name":"Roman"}}`,
 		out.String())
 }
+
+func TestNewScript(t *testing.T) {
+	f, _ := os.Open("fixtures/json.lua")
+	s, err := New("test.lua", f, 10)
+	assert.NoError(t, err)
+	assert.Equal(t, 10, s.Concurrency())
+}

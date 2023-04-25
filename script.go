@@ -27,28 +27,44 @@ var (
 type Script struct {
 	lock sync.RWMutex
 	name string             // The name of the script
+	conc int                // The concurrency setting for the VM pool
 	pool pool               // The pool of runtimes for concurrent use
 	mods []Module           // The injected modules
 	code *lua.FunctionProto // The precompiled code
 }
 
-// FromReader reads a script fron an io.Reader
-func FromReader(name string, r io.Reader, modules ...Module) (*Script, error) {
+// New creates a new script from an io.Reader
+func New(name string, source io.Reader, concurrency int, modules ...Module) (*Script, error) {
+	if concurrency <= 0 {
+		concurrency = defaultConcurrency
+	}
+
 	script := &Script{
 		name: name,
 		mods: modules,
+		conc: concurrency,
 	}
-	return script, script.Update(r)
+	return script, script.Update(source)
+}
+
+// FromReader reads a script fron an io.Reader
+func FromReader(name string, r io.Reader, modules ...Module) (*Script, error) {
+	return New(name, r, 0, modules...)
 }
 
 // FromString reads a script fron a string
 func FromString(name, code string, modules ...Module) (*Script, error) {
-	return FromReader(name, bytes.NewBufferString(code), modules...)
+	return New(name, bytes.NewBufferString(code), 0, modules...)
 }
 
 // Name returns the name of the script
 func (s *Script) Name() string {
 	return s.name
+}
+
+// Concurrency returns the concurrency setting of the script
+func (s *Script) Concurrency() int {
+	return s.conc
 }
 
 // Run runs the main function of the script with arguments.
@@ -80,7 +96,7 @@ func (s *Script) Update(r io.Reader) (err error) {
 
 	// Create a new pool of VMs
 	s.code = code
-	s.pool, err = newPool(s)
+	s.pool, err = newPool(s, s.conc)
 	return
 }
 
@@ -200,8 +216,8 @@ func newState() *lua.LState {
 
 // --------------------------------------------------------------------
 
-// Determine the concurrency for the VM pool
-var concurrency = int(math.Min(
+// defaultConcurrency sets the default concurrency for the VM pool
+var defaultConcurrency = int(math.Min(
 	float64(runtime.GOMAXPROCS(-1)), float64(runtime.NumCPU()),
 ))
 
@@ -209,7 +225,7 @@ var concurrency = int(math.Min(
 type pool chan *vm
 
 // newPool creates a new pool of runtimes.
-func newPool(s *Script) (pool, error) {
+func newPool(s *Script, concurrency int) (pool, error) {
 	pool := make(pool, concurrency)
 	for i := 0; i < concurrency; i++ {
 		vm, err := newVM(s)
