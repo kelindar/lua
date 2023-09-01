@@ -11,6 +11,7 @@ import (
 )
 
 func TestValueOf(t *testing.T) {
+	type myNil struct{}
 	tests := []struct {
 		input  any
 		output Value
@@ -48,6 +49,8 @@ func TestValueOf(t *testing.T) {
 		{input: []float64{1, 2, 3}, output: Numbers{1, 2, 3}},
 		{input: []bool{false, true}, output: Bools{false, true}},
 		{input: nil, output: Nil{}},
+		{input: struct{}{}, output: Nil{}},
+		{input: myNil{}, output: Nil{}},
 		{input: Nil{}, output: Nil{}},
 		{input: map[string]any{
 			"A": "foo",
