@@ -13,6 +13,10 @@ import (
 
 // ValueOf converts the type to our value
 func ValueOf(v any) Value {
+	if v == nil || reflect.TypeOf(v).Size() == 0 {
+		return Nil{}
+	}
+
 	switch v := v.(type) {
 	case Number:
 		return v
@@ -91,6 +95,8 @@ func ValueOf(v any) Value {
 	case []any:
 		return sliceAsArray(v)
 	case nil, Nil:
+		return Nil{}
+	case struct{}:
 		return Nil{}
 	default:
 		out, err := json.Marshal(v)
