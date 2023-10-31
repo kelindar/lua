@@ -1,6 +1,6 @@
 module github.com/kelindar/lua
 
-go 1.18
+go 1.20
 
 require (
 	github.com/cheekybits/genny v1.0.0

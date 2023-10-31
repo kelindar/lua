@@ -146,12 +146,15 @@ type vm struct {
 	argn int            // The number of arguments
 	exec *lua.LState    // The pool of runtimes for concurrent use
 	main *lua.LFunction // The main function
+	tbls *tablePool     // Pool of tables
 }
 
 // newVM creates a new VM for a script
 func newVM(s *Script) (*vm, error) {
+	l := newState()
 	v := &vm{
-		exec: newState(),
+		tbls: newTablePool(l),
+		exec: l,
 		argn: 0,
 		main: nil,
 	}
@@ -189,7 +192,20 @@ func (v *vm) Run(ctx context.Context, args []any) (Value, error) {
 	exec.SetContext(ctx)
 	exec.Push(v.main)
 	for _, arg := range args {
-		exec.Push(lvalueOf(exec, arg))
+		switch x := arg.(type) {
+		case Table:
+			defer pushArg(x, exec, v.tbls)()
+		case Bools:
+			defer pushArg(x, exec, v.tbls)()
+		case Strings:
+			defer pushArg(x, exec, v.tbls)()
+		case Numbers:
+			defer pushArg(x, exec, v.tbls)()
+		case Array:
+			defer pushArg(x, exec, v.tbls)()
+		default:
+			exec.Push(lvalueOf(exec, arg))
+		}
 	}
 
 	// Call the main function
@@ -206,12 +222,47 @@ func (v *vm) Run(ctx context.Context, args []any) (Value, error) {
 // newState creates a new LUA state
 func newState() *lua.LState {
 	return lua.NewState(lua.Options{
-		RegistrySize:        1024 * 20, // this is the initial size of the registry
-		RegistryMaxSize:     1024 * 80, // this is the maximum size that the registry can grow to. If set to `0` (the default) then the registry will not auto grow
-		RegistryGrowStep:    32,        // this is how much to step up the registry by each time it runs out of space. The default is `32`.
-		CallStackSize:       120,       // this is the maximum callstack size of this LState
-		MinimizeStackMemory: true,      // Defaults to `false` if not specified. If set, the callstack will auto grow and shrink as needed up to a max of `CallStackSize`. If not set, the callstack will be fixed at `CallStackSize`.
+		RegistrySize:        1024 * 4,   // this is the initial size of the registry
+		RegistryMaxSize:     1024 * 128, // this is the maximum size that the registry can grow to. If set to `0` (the default) then the registry will not auto grow
+		RegistryGrowStep:    32,         // this is how much to step up the registry by each time it runs out of space. The default is `32`.
+		CallStackSize:       64,         // this is the maximum callstack size of this LState
+		MinimizeStackMemory: true,       // Defaults to `false` if not specified. If set, the callstack will auto grow and shrink as needed up to a max of `CallStackSize`. If not set, the callstack will be fixed at `CallStackSize`.
 	})
+}
+
+// --------------------------------------------------------------------
+
+type tablePool struct {
+	sync.Pool
+}
+
+// newTablePool creates a new table pool
+func newTablePool(state *lua.LState) *tablePool {
+	return &tablePool{
+		Pool: sync.Pool{
+			New: func() any { return state.NewTable() },
+		},
+	}
+}
+
+// Get gets a table from the pool
+func (b *tablePool) Get() *lua.LTable {
+	return b.Pool.Get().(*lua.LTable)
+}
+
+// Put puts a table back into the pool
+func (b *tablePool) Put(x *lua.LTable) {
+	b.Pool.Put(x)
+}
+
+// pushArg pushes an argument into the state
+func pushArg[T tableType](value T, state *lua.LState, p *tablePool) func() {
+	dst := p.Get()
+	value.lcopy(dst, state)
+	state.Push(dst)
+	return func() {
+		p.Put(dst)
+	}
 }
 
 // --------------------------------------------------------------------

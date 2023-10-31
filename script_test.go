@@ -22,11 +22,12 @@ type Person struct {
 }
 
 /*
-Benchmark_Serial/fib-10         	 7672525	       141.6 ns/op	      16 B/op	       2 allocs/op
-Benchmark_Serial/empty-10       	11113112	       108.0 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Serial/update-10      	 1627885	       739.0 ns/op	     240 B/op	      14 allocs/op
-Benchmark_Serial/sleep-sigle-10 	     100	  10899862 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Serial/sleep-multi-10 	    1104	   1096791 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Serial/fib-10         	 7079620	       169.1 ns/op	      16 B/op	       2 allocs/op
+Benchmark_Serial/empty-10       	 9799070	       122.8 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Serial/update-10      	 1353627	       880.6 ns/op	     224 B/op	      14 allocs/op
+Benchmark_Serial/table-10       	 3123861	       386.4 ns/op	      57 B/op	       3 allocs/op
+Benchmark_Serial/sleep-sigle-10 	     100	  11010793 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Serial/sleep-multi-10 	    1093	   1108391 ns/op	       0 B/op	       0 allocs/op
 */
 func Benchmark_Serial(b *testing.B) {
 	b.Run("fib", func(b *testing.B) {
@@ -50,6 +51,21 @@ func Benchmark_Serial(b *testing.B) {
 	b.Run("update", func(b *testing.B) {
 		s, _ := newScript("fixtures/update.lua")
 		input := &Person{Name: "Roman"}
+		b.ReportAllocs()
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			s.Run(context.Background(), input)
+		}
+	})
+
+	b.Run("table", func(b *testing.B) {
+		s, _ := newScript("fixtures/empty.lua")
+		input := Table{
+			"hello": String("world"),
+			"next":  Bool(true),
+			"age":   Number(10),
+		}
+
 		b.ReportAllocs()
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
@@ -245,6 +261,25 @@ func Test_JSON(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, TypeString, out.Type())
 	assert.Equal(t, `{"a":123,"b":"hello","c":10.15,"d":true,"e":{"Name":"Roman"}}`,
+		out.String())
+}
+
+func TestPooledTables(t *testing.T) {
+	input := []any{
+		Table{"hello": String("world")},
+		Array{String("hello"), String("world")},
+		Strings{"hello", "world"},
+		Bools{true, false},
+		Numbers{1, 2, 3},
+	}
+
+	s, err := newScript("fixtures/json.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background(), input...)
+	assert.NoError(t, err)
+	assert.Equal(t, TypeString, out.Type())
+	assert.Equal(t, `{"hello":"world"}`,
 		out.String())
 }
 
