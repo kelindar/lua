@@ -214,10 +214,15 @@ func lvalueOf(exec *lua.LState, value any) lua.LValue {
 		return lua.LNil
 	}
 
-	switch val := reflect.ValueOf(value); val.Kind() {
-	case reflect.Map, reflect.Slice:
-		return ValueOf(val.Interface()).lvalue(exec)
+	switch x := value.(type) {
+	case Value:
+		return x.lvalue(exec)
 	default:
-		return luar.New(exec, value)
+		switch val := reflect.ValueOf(value); val.Kind() {
+		case reflect.Map, reflect.Slice:
+			return ValueOf(val.Interface()).lvalue(exec)
+		default:
+			return luar.New(exec, value)
+		}
 	}
 }

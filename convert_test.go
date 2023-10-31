@@ -10,6 +10,28 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
+/*
+BenchmarkConvert/table-10         	 1862884	       649.8 ns/op	     920 B/op	      16 allocs/op
+*/
+func BenchmarkConvert(b *testing.B) {
+	b.ReportAllocs()
+	l := lua.NewState()
+	defer l.Close()
+
+	b.Run("table", func(b *testing.B) {
+		v := Table{
+			"hello": String("world"),
+			"next":  Bool(true),
+			"age":   Number(10),
+		}
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			_ = v.lvalue(l)
+		}
+	})
+}
+
 func TestValueOf(t *testing.T) {
 	type myNil struct{}
 	tests := []struct {

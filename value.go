@@ -15,6 +15,10 @@ type numberType interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr | ~float32 | ~float64
 }
 
+type tableType interface {
+	lcopy(*lua.LTable, *lua.LState) lua.LValue
+}
+
 var (
 	typeError   = reflect.TypeOf((*error)(nil)).Elem()
 	typeNumber  = reflect.TypeOf(Number(0))
@@ -145,12 +149,17 @@ func (v Numbers) Native() any {
 }
 
 // lvalue converts the value to a LUA value
-func (v Numbers) lvalue(*lua.LState) lua.LValue {
-	tbl := new(lua.LTable)
+func (v Numbers) lvalue(state *lua.LState) lua.LValue {
+	tbl := state.CreateTable(len(v)+4, 0)
+	return v.lcopy(tbl, state)
+}
+
+// lcopy copies the table to another table
+func (v Numbers) lcopy(dst *lua.LTable, state *lua.LState) lua.LValue {
 	for _, item := range v {
-		tbl.Append(lua.LNumber(item))
+		dst.Append(lua.LNumber(item))
 	}
-	return tbl
+	return dst
 }
 
 // --------------------------------------------------------------------
@@ -208,12 +217,17 @@ func (v Strings) table() *lua.LTable {
 }
 
 // lvalue converts the value to a LUA value
-func (v Strings) lvalue(*lua.LState) lua.LValue {
-	tbl := new(lua.LTable)
+func (v Strings) lvalue(state *lua.LState) lua.LValue {
+	tbl := state.CreateTable(len(v)+4, 0)
+	return v.lcopy(tbl, state)
+}
+
+// lcopy copies the table to another table
+func (v Strings) lcopy(dst *lua.LTable, state *lua.LState) lua.LValue {
 	for _, item := range v {
-		tbl.Append(lua.LString(item))
+		dst.Append(lua.LString(item))
 	}
-	return tbl
+	return dst
 }
 
 // --------------------------------------------------------------------
@@ -262,12 +276,17 @@ func (v Bools) Native() any {
 }
 
 // lvalue converts the value to a LUA value
-func (v Bools) lvalue(*lua.LState) lua.LValue {
-	tbl := new(lua.LTable)
+func (v Bools) lvalue(state *lua.LState) lua.LValue {
+	tbl := state.CreateTable(len(v)+4, 0)
+	return v.lcopy(tbl, state)
+}
+
+// lcopy copies the table to another table
+func (v Bools) lcopy(dst *lua.LTable, state *lua.LState) lua.LValue {
 	for _, item := range v {
-		tbl.Append(lua.LBool(item))
+		dst.Append(lua.LBool(item))
 	}
-	return tbl
+	return dst
 }
 
 // --------------------------------------------------------------------
@@ -287,7 +306,7 @@ func (v Table) String() string {
 
 // Native returns value casted to native type
 func (v Table) Native() any {
-	out := make(map[string]any)
+	out := make(map[string]any, len(v))
 	for key, elem := range v {
 		out[key] = elem.Native()
 	}
@@ -296,11 +315,16 @@ func (v Table) Native() any {
 
 // lvalue converts the value to a LUA value
 func (v Table) lvalue(state *lua.LState) lua.LValue {
-	tbl := new(lua.LTable)
+	tbl := state.CreateTable(0, len(v)+4)
+	return v.lcopy(tbl, state)
+}
+
+// lcopy copies the table to another table
+func (v Table) lcopy(dst *lua.LTable, state *lua.LState) lua.LValue {
 	for k, item := range v {
-		tbl.RawSetString(k, lvalueOf(state, item))
+		dst.RawSetString(k, item.lvalue(state))
 	}
-	return tbl
+	return dst
 }
 
 // UnmarshalJSON unmarshals the type from JSON
@@ -340,9 +364,14 @@ func (v Array) Native() any {
 
 // lvalue converts the value to a LUA value
 func (v Array) lvalue(state *lua.LState) lua.LValue {
-	tbl := new(lua.LTable)
+	tbl := state.CreateTable(len(v)+4, 0)
+	return v.lcopy(tbl, state)
+}
+
+// lcopy copies the table to another table
+func (v Array) lcopy(dst *lua.LTable, state *lua.LState) lua.LValue {
 	for _, item := range v {
-		tbl.Append(lvalueOf(state, item))
+		dst.Append(item.lvalue(state))
 	}
-	return tbl
+	return dst
 }
