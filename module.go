@@ -182,16 +182,9 @@ func isError(rt reflect.Type, at int) bool {
 
 func isValid(rt reflect.Type, at int) bool {
 	switch rt.Out(at) {
-	case typeString:
-	case typeNumber:
-	case typeBool:
-	case typeNumbers:
-	case typeStrings:
-	case typeBools:
-	case typeTable:
-	case typeArray:
+	case typeString, typeNumber, typeBool, typeNumbers, typeStrings, typeBools, typeTable, typeArray, typeValue:
+		return true
 	default:
 		return false
 	}
-	return true
 }
