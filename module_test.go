@@ -31,6 +31,7 @@ func testModule() Module {
 	must(m.Register("error", errorfunc))
 	must(m.Register("error1", errorfunc1))
 	must(m.Register("toNumbers", toNumbers))
+	must(m.Register("value", value))
 	return m
 }
 
@@ -87,6 +88,10 @@ func toNumbers(v Value) (Numbers, error) {
 	default:
 		return nil, fmt.Errorf("unsupported type %T", v)
 	}
+}
+
+func value(v Value) (Value, error) {
+	return v, nil
 }
 
 func Test_Join(t *testing.T) {
