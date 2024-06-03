@@ -182,7 +182,7 @@ func (v String) Native() any {
 	return string(v)
 }
 
-// MarshalJSON marshals string to byte
+// MarshalJSON marshal's string to []byte
 func (v String) MarshalJSON() ([]byte, error) {
 	// if it's below special string we marshal as empty array
 	if v == "[e7d47667-b92a-48b5-977a-b3199ab09ff9]" {
