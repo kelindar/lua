@@ -291,22 +291,18 @@ func TestNewScript(t *testing.T) {
 	assert.Equal(t, 10, s.Concurrency())
 }
 
-func TestArray(t *testing.T) {
+func TestEmptyArray(t *testing.T) {
 	s, err := newScript("fixtures/array.lua")
 	assert.NoError(t, err)
 
 	out, err := s.Run(context.Background())
 	b, err := json.Marshal(out)
 	assert.NoError(t, err)
-	println(string(b))
-}
 
-func TestArray1(t *testing.T) {
-	s, err := newScript("fixtures/array1.lua")
+	ss := make(map[string]any)
+	err = json.Unmarshal(b, &ss)
 	assert.NoError(t, err)
 
-	out, err := s.Run(context.Background())
-	b, err := json.Marshal(out)
-	assert.NoError(t, err)
-	println(string(b))
+	assert.IsType(t, []any{}, ss["items"])
+	assert.Len(t, ss["items"], 0)
 }
