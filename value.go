@@ -182,6 +182,13 @@ func (v String) Native() any {
 	return string(v)
 }
 
+func (v String) MarshalJSON() ([]byte, error) {
+	if v == "[e7d47667-b92a-48b5-977a-b3199ab09ff9]" {
+		return json.Marshal([]any{})
+	}
+	return json.Marshal(string(v))
+}
+
 // lvalue converts the value to a LUA value
 func (v String) lvalue(*lua.LState) lua.LValue {
 	return lua.LString(v)

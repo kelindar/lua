@@ -5,6 +5,7 @@ package lua
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -288,4 +289,24 @@ func TestNewScript(t *testing.T) {
 	s, err := New("test.lua", f, 10)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, s.Concurrency())
+}
+
+func TestArray(t *testing.T) {
+	s, err := newScript("fixtures/array.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background())
+	b, err := json.Marshal(out)
+	assert.NoError(t, err)
+	println(string(b))
+}
+
+func TestArray1(t *testing.T) {
+	s, err := newScript("fixtures/array1.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background())
+	b, err := json.Marshal(out)
+	assert.NoError(t, err)
+	println(string(b))
 }
