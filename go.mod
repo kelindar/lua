@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/cheekybits/genny v1.0.0
 	github.com/stretchr/testify v1.8.0
-	github.com/yuin/gopher-lua v0.0.0-20220504180219-658193537a64
+	github.com/yuin/gopher-lua v1.1.1
 	layeh.com/gopher-luar v1.0.10
 )
 

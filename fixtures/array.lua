@@ -1,14 +1,14 @@
+local json = require("json")
+
 function main()
     return {
-        ["items"] = toArray({})
+        ["empty"] = json.array(),
+        ["empty_map"] = json.array({}),
+        ["array"] = json.array({1, 2, 3}),
+        ["table"] = json.array({["apple"] = 5}),
+        ["str"] = json.array("hello"),
+        ["int"] = json.array(12),
+        ["bool"] = json.array(true),
+        ["float"] = json.array(12.34)
     }
-end
-
-
-function toArray(val)
-    -- this indicates to Go that the value is an empty array
-    if #val == 0 then
-        return "[e7d47667-b92a-48b5-977a-b3199ab09ff9]"
-    end
-    return val
 end

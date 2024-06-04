@@ -299,10 +299,15 @@ func TestEmptyArray(t *testing.T) {
 	b, err := json.Marshal(out)
 	assert.NoError(t, err)
 
-	ss := make(map[string]any)
-	err = json.Unmarshal(b, &ss)
-	assert.NoError(t, err)
+	assert.JSONEq(t, `{
+		"empty": [],
+		"empty_map": [],
+		"array": [1, 2, 3],
+		"table": [{"apple": 5}],
+		"str": ["hello"],
+		"int": [12],
+		"bool": [true],
+		"float": [12.34]
+	}`, string(b))
 
-	assert.IsType(t, []any{}, ss["items"])
-	assert.Len(t, ss["items"], 0)
 }

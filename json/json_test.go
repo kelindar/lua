@@ -7,10 +7,11 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 )
 
 func TestSimple(t *testing.T) {
@@ -92,5 +93,32 @@ func TestDecodeValue_jsonNumber(t *testing.T) {
 	v := DecodeValue(s, json.Number("124.11"))
 	if v.Type() != lua.LTString || v.String() != "124.11" {
 		t.Fatalf("expecting LString, got %T", v)
+	}
+}
+
+func TestArrayCoerce(t *testing.T) {
+	const require = `local json = require("json")`
+	tests := [][2]string{
+		{"", "[]"},
+		{"{}", "[]"},
+		{"{1, 2}", "[1,2]"},
+		{`"hello"`, `[\"hello\"]`},
+		{`1.2`, `[1.2]`},
+		{`true`, `[true]`},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc[0], func(t *testing.T) {
+			s := lua.NewState()
+			defer s.Close()
+
+			script := fmt.Sprintf("%s\n"+
+				"print(json.array(%s))\n"+
+				"assert(json.encode(json.array(%s)) == \"%s\")",
+				require, tc[0], tc[0], tc[1])
+
+			s.PreloadModule("json", Loader)
+			assert.NoError(t, s.DoString(script))
+		})
 	}
 }
