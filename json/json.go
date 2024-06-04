@@ -61,8 +61,6 @@ func apiEncode(state *lua.LState) int {
 // --------------------------------------------------------------------
 
 // EmptyArray is a marker for an empty array.
-//const EmptyArray = lua.LString(`[e7d47667-b92a-48b5-977a-b3199ab09ff9]`)
-
 var EmptyArray = &lua.LUserData{Value: []any(nil)}
 
 // apiArray creates an array from the arguments.
