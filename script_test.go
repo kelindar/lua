@@ -5,6 +5,7 @@ package lua
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"testing"
 
@@ -288,4 +289,25 @@ func TestNewScript(t *testing.T) {
 	s, err := New("test.lua", f, 10)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, s.Concurrency())
+}
+
+func TestEmptyArray(t *testing.T) {
+	s, err := newScript("fixtures/array.lua")
+	assert.NoError(t, err)
+
+	out, err := s.Run(context.Background())
+	b, err := json.Marshal(out)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, `{
+		"empty": [],
+		"empty_map": [],
+		"array": [1, 2, 3],
+		"table": [{"apple": 5}],
+		"str": ["hello"],
+		"int": [12],
+		"bool": [true],
+		"float": [12.34]
+	}`, string(b))
+
 }

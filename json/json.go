@@ -29,32 +29,73 @@ func Loader(L *lua.LState) int {
 var api = map[string]lua.LGFunction{
 	"decode": apiDecode,
 	"encode": apiEncode,
+	"array":  apiArray,
 }
 
-func apiDecode(L *lua.LState) int {
-	str := L.CheckString(1)
+func apiDecode(state *lua.LState) int {
+	str := state.CheckString(1)
 
-	value, err := Decode(L, []byte(str))
+	value, err := Decode(state, []byte(str))
 	if err != nil {
-		L.Push(lua.LNil)
-		L.Push(lua.LString(err.Error()))
+		state.Push(lua.LNil)
+		state.Push(lua.LString(err.Error()))
 		return 2
 	}
-	L.Push(value)
+	state.Push(value)
 	return 1
 }
 
-func apiEncode(L *lua.LState) int {
-	value := L.CheckAny(1)
+func apiEncode(state *lua.LState) int {
+	value := state.CheckAny(1)
 
 	data, err := Encode(value)
 	if err != nil {
-		L.Push(lua.LNil)
-		L.RaiseError(err.Error())
+		state.Push(lua.LNil)
+		state.RaiseError(err.Error())
 		return 1
 	}
-	L.Push(lua.LString(string(data)))
+	state.Push(lua.LString(string(data)))
 	return 1
+}
+
+// --------------------------------------------------------------------
+
+// EmptyArray is a marker for an empty array.
+var EmptyArray = &lua.LUserData{Value: []any(nil)}
+
+// apiArray creates an array from the arguments.
+func apiArray(state *lua.LState) int {
+	switch state.GetTop() {
+	case 0:
+		state.Push(EmptyArray)
+		return 1
+	case 1:
+		// If it's not a table, or empty return a marker
+		table, ok := state.CheckAny(1).(*lua.LTable)
+		switch {
+		case ok && table.Len() > 0: // array
+			state.Push(table)
+			return 1
+		case ok: // check if it's an empty map
+			k, v := table.Next(lua.LNil)
+			if k == lua.LNil && v == lua.LNil {
+				state.Push(EmptyArray)
+				return 1
+			}
+		}
+
+		// Otherwise, return an array
+		fallthrough
+	default:
+		table := state.CreateTable(state.GetTop(), 0)
+		for i := 1; i <= state.GetTop(); i++ {
+			table.RawSetInt(i, state.Get(i))
+		}
+
+		// Return the table
+		state.Push(table)
+		return 1
+	}
 }
 
 // --------------------------------------------------------------------
@@ -87,7 +128,12 @@ func (j jsonValue) MarshalJSON() (data []byte, err error) {
 	case *lua.LNilType:
 		data = []byte(`null`)
 	case *lua.LUserData:
-		data, err = json.Marshal(converted.Value)
+		switch {
+		case converted == EmptyArray:
+			data = []byte(`[]`)
+		default:
+			data, err = json.Marshal(converted.Value)
+		}
 	case lua.LString:
 		data, err = json.Marshal(string(converted))
 	case *lua.LTable:
