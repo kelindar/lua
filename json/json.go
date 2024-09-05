@@ -84,6 +84,12 @@ func apiArray(state *lua.LState) int {
 			}
 		}
 
+		// Wrap user data in an array
+		if custom, ok := state.CheckAny(1).(*lua.LUserData); ok {
+			state.Push(&lua.LUserData{Value: []any{custom.Value}})
+			return 1
+		}
+
 		// Otherwise, return an array
 		fallthrough
 	default:

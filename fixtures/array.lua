@@ -9,6 +9,7 @@ function main()
         ["str"] = json.array("hello"),
         ["int"] = json.array(12),
         ["bool"] = json.array(true),
-        ["float"] = json.array(12.34)
+        ["float"] = json.array(12.34),
+        ["empties"] = json.array(json.array())
     }
 end

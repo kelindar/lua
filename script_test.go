@@ -307,7 +307,7 @@ func TestEmptyArray(t *testing.T) {
 		"str": ["hello"],
 		"int": [12],
 		"bool": [true],
-		"float": [12.34]
+		"float": [12.34],
+		"empties": [[]]
 	}`, string(b))
-
 }
